@@ -682,6 +682,7 @@ rq_inZone = function(unit, zoneName)
   if not shape then return false end
 
   local pt = unit:getPoint()
+  if not pt then return false end
   local p2 = { x = pt.x, z = pt.z }
 
   if shape.kind == "circle" then
@@ -756,6 +757,10 @@ local function rq_debugZone(zoneName, groupId, unit)
   end
 
   local pt = unit:getPoint()
+  if not pt then
+    rq_msgToGroup(groupId, "Unable to get unit position.", 10)
+    return
+  end
   local inside = rq_inZone(unit, zoneName)
 
   if shape.kind == "circle" then
@@ -891,6 +896,7 @@ local function rq_spawnGroupFromTemplate(templateName, suffix)
     local u = (gg:getUnits() or {})[1]
     if u and u:isExist() then
       local p = u:getPoint()
+      if not p then return end
       -- Visual + text mark (debug)
       local h = land.getHeight({x=p.x, y=p.z})
 
@@ -999,7 +1005,10 @@ local function rq_getZeroCutoffFromCurve(curve)
   return curve[#curve][1]
 end
 
-local function rq_ceilDiv(a,b) return math.floor((a + b - 1) / b) end
+local function rq_ceilDiv(a,b)
+  if b == 0 then return 0 end
+  return math.floor((a + b - 1) / b)
+end
 
 --------------------------------------------------------------------
 -- ZONE CLEANUP (RANGE_CLEANUP)
@@ -1449,6 +1458,9 @@ local function rq_laserStart(run, jtacUnitName, targetUnitName, code)
   end
 
   local targetPoint = tgt:getPoint()
+  if not targetPoint then
+    return false
+  end
   local localRef = { x = 0, y = 1, z = 0 } -- 1m above JTAC (per Hoggit example)
 
   -- Hoggit signature:
@@ -1475,6 +1487,7 @@ local function rq_laserUpdate(run)
   if not tgt or not tgt:isExist() then return end
 
   local p = tgt:getPoint()
+  if not p then return end
   Spot.setPoint(run.laser.spot, { x=p.x, y=p.y, z=p.z })
 end
 
@@ -1901,10 +1914,14 @@ local function rq_computeGunEndPad(run)
   local gcfg = RANGEQUAL.cfg and RANGEQUAL.cfg.globals or {}
   local bulletVel = gcfg.gunBulletVelocityMs or 805  -- m/s
   local buffer = gcfg.gunEndPadBufferSec or 2.0  -- seconds
-  
+
+  if bulletVel == 0 then
+    return 15  -- Fallback to default if bullet velocity is zero
+  end
+
   local flightTime = rangeM / bulletVel
   local totalPad = flightTime + buffer
-  
+
   return totalPad
 end
 

@@ -1036,15 +1036,19 @@ end
 ----------------------------------------------------------------
 local function rq_lookupCurveLinear(curve, t)
   for _, row in ipairs(curve or {}) do
-    local maxT, pts = row[1], row[2]
-    if t <= maxT then return pts end
+    if row and row[1] and row[2] then
+      local maxT, pts = row[1], row[2]
+      if t <= maxT then return pts end
+    end
   end
   return 0
 end
 
 local function rq_getZeroCutoffFromCurve(curve)
   if not curve or #curve == 0 then return 0 end
-  return curve[#curve][1]
+  local lastRow = curve[#curve]
+  if not lastRow or not lastRow[1] then return 0 end
+  return lastRow[1]
 end
 
 local function rq_ceilDiv(a,b)
@@ -1592,7 +1596,7 @@ local function rq_getTEAStaticTemplate()
   local heading = 0
   if tpl.getPosition then
     local pos = tpl:getPosition()
-    if pos and pos.x then
+    if pos and pos.x and pos.x.z and pos.x.x then
       -- heading around y-axis from x-axis vector
       heading = math.atan2(pos.x.z, pos.x.x)
     end

@@ -357,6 +357,10 @@ local function rq_computeAutoBandOnce(run, shooterUnit)
   end
 
   local shooterPt = shooterUnit:getPoint()
+  if not shooterPt then
+    run.autoBandComputed = true
+    return
+  end
   local bestD, bestName
 
   for _, rec in ipairs(run.targets or {}) do
@@ -1621,8 +1625,10 @@ local function rq_buildTEAPolyFromCorners(cornerGroupNames)
       local u = units[1]
       if u and u:isExist() then
         local p = u:getPoint()
-        pts[#pts+1] = { x = p.x, z = p.z }
-        gotPt = true
+        if p then
+          pts[#pts+1] = { x = p.x, z = p.z }
+          gotPt = true
+        end
       end
     end
 
@@ -1632,8 +1638,10 @@ local function rq_buildTEAPolyFromCorners(cornerGroupNames)
       local u2 = Unit.getByName(uname)
       if u2 and u2:isExist() then
         local p = u2:getPoint()
-        pts[#pts+1] = { x = p.x, z = p.z }
-        gotPt = true
+        if p then
+          pts[#pts+1] = { x = p.x, z = p.z }
+          gotPt = true
+        end
       end
     end
 
@@ -1649,8 +1657,10 @@ local function rq_buildTEAPolyFromCorners(cornerGroupNames)
       local s = StaticObject.getByName(gname) or StaticObject.getByName(gname .. "_U1")
       if s and s:isExist() then
         local p = s:getPoint()
-        pts[#pts+1] = { x = p.x, z = p.z }
-        gotPt = true
+        if p then
+          pts[#pts+1] = { x = p.x, z = p.z }
+          gotPt = true
+        end
       end
     end
   end
@@ -1800,8 +1810,10 @@ local function rq_tickWeaponTracking(run)
 
     if w and w:isExist() then
       local p = w:getPoint()
-      wrec.last = { x=p.x, z=p.z }
-      remaining[#remaining+1] = wrec
+      if p then
+        wrec.last = { x=p.x, z=p.z }
+        remaining[#remaining+1] = wrec
+      end
     else
       if wrec.last then
         local inside = rq_pointInPoly({x=wrec.last.x, z=wrec.last.z}, teaVerts)
@@ -1850,8 +1862,10 @@ local function rq_tickHellfireTracking(run)
     local w = wrec.weapon
     if w and w:isExist() then
       local p = w:getPoint()
-      wrec.last = { x=p.x, z=p.z }
-      remaining[#remaining+1] = wrec
+      if p then
+        wrec.last = { x=p.x, z=p.z }
+        remaining[#remaining+1] = wrec
+      end
     else
       -- Weapon disappeared (impact or despawn). If no effect happened, count as a miss.
       run.hfMisses = (run.hfMisses or 0) + 1

@@ -341,6 +341,17 @@ local function rq_motionOk(task, unit)
   end
 end
 
+-- Extract aircraft type prefix for template names (e.g., "AH-64D" -> "AH64")
+local function rq_getAircraftPrefix(unit)
+  if not unit or not unit.getTypeName then return nil end
+  local typeName = unit:getTypeName()
+  if not typeName then return nil end
+
+  -- Remove hyphens and extract prefix (e.g., "AH-64D" -> "AH64", "OH-58D" -> "OH58")
+  local prefix = typeName:gsub("%-", ""):match("^([A-Z]+%d+)")
+  return prefix
+end
+
 
 
 -- ------------------------------------------------------------
@@ -2365,34 +2376,48 @@ local function rq_targetsDamagedOrDead(run)
 end
 
 
-local function rq_spawnTargetsFromTemplate(run, templateName)
+local function rq_spawnTargetsFromTemplate(run, templateName, aircraftPrefix)
   run.targets = {}
   run.spawnedGroups = {}
   run.spawnedStatics = {}
 
-  -- Try unit-group template first
-  local gname = rq_spawnGroupFromTemplate(templateName)
-  if gname then
-    run.spawnedGroups[#run.spawnedGroups+1] = gname
-    local g = Group.getByName(gname)
-    if g and g:isExist() then
-      for _, u in ipairs(g:getUnits() or {}) do
-        if u and u:isExist() then
-          run.targets[#run.targets+1] = {kind="unit", name=u:getName()}
-        end
-      end
-    end
-    return true
+  -- If aircraft prefix is provided, try prefixed template first (e.g., "AH64_T01_TARGET")
+  local prefixedName = nil
+  if aircraftPrefix then
+    prefixedName = aircraftPrefix .. "_" .. templateName
   end
 
-  -- Otherwise try static-group template
-  local snames = rq_spawnStaticGroupFromTemplate(templateName)
-  if snames and type(snames) == "table" then
-    for _, sname in ipairs(snames) do
-      run.spawnedStatics[#run.spawnedStatics+1] = sname
-      run.targets[#run.targets+1] = {kind="static", name=sname}
+  -- Try unit-group template (prefixed first if available, then fallback to original)
+  for _, tname in ipairs({prefixedName, templateName}) do
+    if tname then
+      local gname = rq_spawnGroupFromTemplate(tname)
+      if gname then
+        run.spawnedGroups[#run.spawnedGroups+1] = gname
+        local g = Group.getByName(gname)
+        if g and g:isExist() then
+          for _, u in ipairs(g:getUnits() or {}) do
+            if u and u:isExist() then
+              run.targets[#run.targets+1] = {kind="unit", name=u:getName()}
+            end
+          end
+        end
+        return true
+      end
     end
-    return true
+  end
+
+  -- Otherwise try static-group template (prefixed first if available, then fallback to original)
+  for _, tname in ipairs({prefixedName, templateName}) do
+    if tname then
+      local snames = rq_spawnStaticGroupFromTemplate(tname)
+      if snames and type(snames) == "table" then
+        for _, sname in ipairs(snames) do
+          run.spawnedStatics[#run.spawnedStatics+1] = sname
+          run.targets[#run.targets+1] = {kind="static", name=sname}
+        end
+        return true
+      end
+    end
   end
 
   return false
@@ -2484,8 +2509,10 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
     run.task.laserCode = rq_generateLaserCode()
   end
 
+  -- Get aircraft type prefix for template naming (e.g., "AH64" for Apache, "OH58" for Kiowa)
+  local aircraftPrefix = rq_getAircraftPrefix(unit)
 
-  local ok = rq_spawnTargetsFromTemplate(run, task.targetTemplate)
+  local ok = rq_spawnTargetsFromTemplate(run, task.targetTemplate, aircraftPrefix)
   if not ok then
     rq_msgToGroup(run.groupId, "Template not found (group or static-group): " .. tostring(task.targetTemplate), 10)
     return
@@ -2496,7 +2523,14 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
   -- Spawn JTAC for remote HF
   if task.type == "HF_REMOTE" and task.jtacTemplate and run.spawnedGroups and run.spawnedGroups[1] then
     local targetGroupName = run.spawnedGroups[1] -- remote HF target must be a UNIT GROUP
-    local jtacName = rq_spawnGroupFromTemplate(task.jtacTemplate)
+    -- Try prefixed JTAC template first, fallback to original
+    local jtacName = nil
+    if aircraftPrefix then
+      jtacName = rq_spawnGroupFromTemplate(aircraftPrefix .. "_" .. task.jtacTemplate)
+    end
+    if not jtacName then
+      jtacName = rq_spawnGroupFromTemplate(task.jtacTemplate)
+    end
     run.spawnedJTAC = jtacName
     if jtacName then end
   elseif task.type == "HF_REMOTE" and not (run.spawnedGroups and run.spawnedGroups[1]) then

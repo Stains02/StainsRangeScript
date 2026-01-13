@@ -144,14 +144,14 @@ RANGEQUAL.cfg = {
     m4Velocity = 900,   -- M4 rifle muzzle velocity in m/s (5.56mm NATO)
     tasks = {
       [1] = { id=1,  type="HF_SELF",   targetTemplate="OH58_T01_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
-      [2] = { id=2,  type="GUN50CAL",  targetTemplate="OH58_T02_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=100 }, scoringCurve="GUN_STD", motion="MOVE" },
-      [3] = { id=3,  type="HF_SELF",   targetTemplate="OH58_T03_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
-      [4] = { id=4,  type="ROCKETS",   targetTemplate="OH58_T04_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="MOVE" },
-      [5] = { id=5,  type="ROCKETS",   targetTemplate="OH58_T05_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=8 }, rocketCurve="ROCKET_STD", motion="MOVE" },
-      [6] = { id=6,  type="GUNM4",     targetTemplate="OH58_T06_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=999 }, scoringCurve="GUN_STD", motion="HOVER" },
-      [7] = { id=7,  type="GUN50CAL",  targetTemplate="OH58_T07_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=100 }, scoringCurve="GUN_STD", motion="MOVE" },
+      [2] = { id=2,  type="HF_REMOTE", targetTemplate="OH58_T02_TARGET", jtacTemplate="OH58_T02_JTAC", laserCode=1688, allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_REMOTE", motion="HOVER" },
+      [3] = { id=3,  type="GUN50CAL",  targetTemplate="OH58_T03_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=100 }, scoringCurve="GUN_STD", motion="MOVE" },
+      [4] = { id=4,  type="GUN50CAL",  targetTemplate="OH58_T04_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=100 }, scoringCurve="GUN_STD", motion="MOVE" },
+      [5] = { id=5,  type="ROCKETS",   targetTemplate="OH58_T05_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="MOVE" },
+      [6] = { id=6,  type="ROCKETS",   targetTemplate="OH58_T06_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=8 }, rocketCurve="ROCKET_STD", motion="MOVE" },
+      [7] = { id=7,  type="GUNM4",     targetTemplate="OH58_T07_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=999 }, scoringCurve="GUN_STD", motion="HOVER" },
       [8] = { id=8,  type="APKWS",     targetTemplate="OH58_T08_TARGET", allowed={ apkws=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="APKWS_STD", motion="HOVER" },
-      [9] = { id=9,  type="HF_REMOTE", targetTemplate="OH58_T09_TARGET", jtacTemplate="OH58_T09_JTAC", laserCode=1688, allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_REMOTE", motion="HOVER" },
+      [9] = { id=9,  type="APKWS",     targetTemplate="OH58_T09_TARGET", allowed={ apkws=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="APKWS_STD", motion="HOVER" },
       [10]= { id=10, type="STINGER",   targetTemplate="OH58_T10_AIR_TARGET", allowed={ stingers=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="STINGER_STD", motion="HOVER" },
     }
   }

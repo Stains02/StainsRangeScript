@@ -2280,7 +2280,7 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
     local jtacName = rq_spawnGroupFromTemplate(task.jtacTemplate)
     run.spawnedJTAC = jtacName
     if jtacName then end
-  elseif task.type == "HF_REMOTE" and (not run.spawnedGroups[1]) then
+  elseif task.type == "HF_REMOTE" and not (run.spawnedGroups and run.spawnedGroups[1]) then
     rq_msgToGroup(run.groupId, "Task requires UNIT GROUP target (for JTAC lasing). Use a vehicle group template for "..tostring(task.targetTemplate), 12)
   end
 

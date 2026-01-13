@@ -2523,6 +2523,9 @@ local function rq_tick()
 
         elseif tt == "HF_SELF" or tt == "HF_REMOTE" then
           rq_tickHellfireTracking(run)
+          if tt == "HF_REMOTE" then
+            rq_laserUpdate(run)
+          end
           local allowed = run.task.allowed and run.task.allowed.hellfires or 0
           if allowed > 0 and run.hellfiresFired >= allowed and (run.hfTrack and #run.hfTrack == 0) then
             rq_endRunNow(run, "NO_EFFECT")

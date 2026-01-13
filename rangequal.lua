@@ -107,9 +107,15 @@ RANGEQUAL.cfg = {
       },
   },
 
-    -- APKWS (copy of ROCKET_STD 1-pair for future tuning)
+    -- APKWS (laser-guided rockets - range-banded like HF_SELF for future tuning)
     APKWS_STD = {
-      {13,100},{14,95},{15,90},{16,85},{17,80},{18,75},{19,70},{21,50},{22,30},
+      [1] = { {15,100},{17,95},{18,90},{19,85},{20,80},{21,75},{22,70},{24,50},{25,30} },
+      [2] = { {19,100},{20,95},{22,90},{23,85},{24,80},{26,75},{27,70},{30,50},{31,30} },
+      [3] = { {23,100},{25,95},{26,90},{28,85},{30,80},{31,75},{33,70},{36,50},{38,30} },
+      [4] = { {28,100},{30,95},{32,90},{34,85},{36,80},{38,75},{40,70},{44,50},{46,30} },
+      [5] = { {34,100},{36,95},{38,90},{41,85},{43,80},{46,75},{48,70},{53,50},{55,30} },
+      [6] = { {39,100},{42,95},{45,90},{48,85},{50,80},{53,75},{56,70},{62,50},{64,30} },
+      [7] = { {46,100},{50,95},{53,90},{56,85},{59,80},{63,75},{66,70},{73,50},{76,30} },
     },
 
     -- STINGER (copy of HF_REMOTE for future tuning)
@@ -379,9 +385,9 @@ local function rq_computeAutoBandOnce(run, shooterUnit)
     return
   end
 
-  -- Only for ROCKETS and HF_SELF (autonomous Hellfire)
+  -- Only for ROCKETS, HF_SELF (autonomous Hellfire), and APKWS
   local t = run.task and run.task.type
-  if t ~= "ROCKETS" and t ~= "HF_SELF" then
+  if t ~= "ROCKETS" and t ~= "HF_SELF" and t ~= "APKWS" then
     run.autoBandComputed = true
     return
   end
@@ -413,6 +419,8 @@ local function rq_computeAutoBandOnce(run, shooterUnit)
       run.rocketRangeBandAuto = band
     elseif t == "HF_SELF" then
       run.hfRangeBandAuto = band
+    elseif t == "APKWS" then
+      run.apkwsRangeBandAuto = band
     end
     rq_log(4, string.format("AutoBand: task %s band %d (%.0fm) closest %s", tostring(run.taskId), band, bestD, tostring(bestName)))
   end
@@ -2024,7 +2032,8 @@ local function rq_computeMaxWaitSec(run)
   elseif taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.GUN_STD or {})
   elseif taskType == "APKWS" then
-    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.APKWS_STD or {})
+    local band = run.apkwsRangeBandAuto or 7
+    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.APKWS_STD[band] or {})
   elseif taskType == "STINGER" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.STINGER_STD or {})
   elseif taskType == "ROCKETS" then
@@ -2051,7 +2060,7 @@ local function rq_computeDynamicTimeout(run)
   elseif taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.GUN_STD or {})
   elseif taskType == "APKWS" then
-    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.APKWS_STD or {})
+    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.APKWS_STD[band] or {})
   elseif taskType == "STINGER" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.STINGER_STD or {})
   elseif taskType == "ROCKETS" then
@@ -2113,7 +2122,8 @@ local function rq_scoreFromTables(run, elapsedSec)
   elseif taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" then
     return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.GUN_STD or {}, elapsedSec)
   elseif taskType == "APKWS" then
-    return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.APKWS_STD or {}, elapsedSec)
+    local band = run.apkwsRangeBandAuto or 7
+    return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.APKWS_STD[band] or {}, elapsedSec)
   elseif taskType == "STINGER" then
     return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.STINGER_STD or {}, elapsedSec)
   elseif taskType == "ROCKETS" then

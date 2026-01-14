@@ -1,0 +1,17 @@
+{
+    "Lua.diagnostics.globals": [
+        "land",
+        "trigger",
+        "StaticObject",
+        "coalition",
+        "Group",
+        "timer",
+        "env",
+        "Unit",
+        "world",
+        "Object",
+        "Spot",
+        "Weapon",
+        "missionCommands"
+    ]
+}

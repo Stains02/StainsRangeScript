@@ -2447,7 +2447,12 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
 
   trigger.action.outText("DEBUG: About to get aircraft config...", 5)
   -- Get aircraft-specific task table
-  local aircraftConfig = rq_getAircraftConfig(unit)
+  local success, aircraftConfig = pcall(function() return rq_getAircraftConfig(unit) end)
+  if not success then
+    trigger.action.outText("DEBUG: ERROR calling rq_getAircraftConfig: " .. tostring(aircraftConfig), 10)
+    rq_msgToGroup(group:getID(), "ERROR: Failed to get aircraft config: " .. tostring(aircraftConfig), 15)
+    return
+  end
   trigger.action.outText("DEBUG: aircraftConfig = " .. tostring(aircraftConfig), 5)
 
   if not aircraftConfig then
@@ -2998,64 +3003,64 @@ end
 -- AIRCRAFT TYPE DETECTION
 ----------------------------------------------------------------
 local function rq_getAircraftType(unit)
-  trigger.action.outText("DEBUG: rq_getAircraftType called", 5)
+  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType called", 5) end)
 
   if not unit or not unit:isExist() then
-    trigger.action.outText("DEBUG: rq_getAircraftType - unit nil or doesn't exist", 5)
+    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType - unit nil or doesn't exist", 5) end)
     return nil
   end
 
-  trigger.action.outText("DEBUG: Getting type name...", 5)
+  pcall(function() trigger.action.outText("DEBUG: Getting type name...", 5) end)
   local typeName = unit:getTypeName()
-  trigger.action.outText("DEBUG: typeName = " .. tostring(typeName), 5)
+  pcall(function() trigger.action.outText("DEBUG: typeName = " .. tostring(typeName), 5) end)
 
   if not typeName then
-    trigger.action.outText("DEBUG: typeName is nil", 5)
+    pcall(function() trigger.action.outText("DEBUG: typeName is nil", 5) end)
     return nil
   end
 
   local tn = typeName:lower()
-  trigger.action.outText("DEBUG: tn (lowercase) = " .. tostring(tn), 5)
+  pcall(function() trigger.action.outText("DEBUG: tn (lowercase) = " .. tostring(tn), 5) end)
 
   -- OH-58D Kiowa Warrior
   if tn:find("oh-58", 1, true) or tn:find("oh58", 1, true) or tn:find("kiowa", 1, true) then
-    trigger.action.outText("DEBUG: Detected OH-58", 5)
+    pcall(function() trigger.action.outText("DEBUG: Detected OH-58", 5) end)
     return "oh58"
   end
 
   -- AH-64D Apache
   if tn:find("ah-64", 1, true) or tn:find("ah64", 1, true) or tn:find("apache", 1, true) then
-    trigger.action.outText("DEBUG: Detected AH-64", 5)
+    pcall(function() trigger.action.outText("DEBUG: Detected AH-64", 5) end)
     return "ah64"
   end
 
   -- Default to AH-64 for backwards compatibility with existing missions
-  trigger.action.outText("DEBUG: No match, defaulting to ah64", 5)
+  pcall(function() trigger.action.outText("DEBUG: No match, defaulting to ah64", 5) end)
   return "ah64"
 end
 
 local function rq_getAircraftConfig(unit)
-  trigger.action.outText("DEBUG: rq_getAircraftConfig called", 5)
+  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig called", 5) end)
 
   if not unit or not unit:isExist() then
-    trigger.action.outText("DEBUG: rq_getAircraftConfig - unit nil or doesn't exist", 5)
+    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig - unit nil or doesn't exist", 5) end)
     return nil
   end
 
-  trigger.action.outText("DEBUG: Calling rq_getAircraftType...", 5)
+  pcall(function() trigger.action.outText("DEBUG: Calling rq_getAircraftType...", 5) end)
   local aircraftType = rq_getAircraftType(unit)
-  trigger.action.outText("DEBUG: aircraftType = " .. tostring(aircraftType), 5)
+  pcall(function() trigger.action.outText("DEBUG: aircraftType = " .. tostring(aircraftType), 5) end)
 
   if not aircraftType then
-    trigger.action.outText("DEBUG: aircraftType is nil", 5)
+    pcall(function() trigger.action.outText("DEBUG: aircraftType is nil", 5) end)
     return nil
   end
 
   if aircraftType == "oh58" then
-    trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.oh58", 5)
+    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.oh58", 5) end)
     return RANGEQUAL.cfg.oh58
   else
-    trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.ah64", 5)
+    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.ah64", 5) end)
     return RANGEQUAL.cfg.ah64
   end
 end

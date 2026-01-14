@@ -536,6 +536,7 @@ local RQ_OUTCOME_SOUNDS = {
   NO_EFFECT         = "NO_EFFECT.ogg",
   EFFECT            = "EFFECT.ogg",
   IDLE_TIMEOUT      = "IDLE_TIMEOUT.ogg",
+  UNIT_LOST         = "NO_EFFECT.ogg",  -- Use NO_EFFECT sound when unit disappears
 }
 
 -- ===========================================================
@@ -2694,7 +2695,9 @@ local function rq_tick()
     local unit = Unit.getByName(ownerUnitName)
 
     if (not unit) or (not unit:isExist()) then
-      rq_cleanup(run)
+      -- Unit no longer exists (player quit, crashed, switched aircraft, etc.)
+      -- End the run properly to release range lock and play RANGE_CLEAR
+      rq_endRunNow(run, "UNIT_LOST")
       RANGEQUAL._state.perUnit[ownerUnitName] = nil
     else
       local ended = false

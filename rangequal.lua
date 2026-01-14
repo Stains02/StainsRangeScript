@@ -158,7 +158,7 @@ RANGEQUAL.cfg = {
       [7] = { id=7,  type="GUNM4",     targetTemplate="OH58_T07_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=999 }, scoringCurve="GUN_STD", motion="HOVER" },
       [8] = { id=8,  type="APKWS",     targetTemplate="OH58_T08_TARGET", allowed={ apkws=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="APKWS_STD", motion="HOVER" },
       [9] = { id=9,  type="APKWS",     targetTemplate="OH58_T09_TARGET", allowed={ apkws=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="APKWS_STD", motion="HOVER" },
-      [10]= { id=10, type="STINGER",   targetTemplate="OH58_T10_AIR_TARGET", allowed={ stingers=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="STINGER_STD", motion="HOVER" },
+      [10]= { id=10, type="STINGER",   targetTemplate="OH58_T10_TARGET", allowed={ stingers=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="STINGER_STD", motion="HOVER" },
     }
   }
 }

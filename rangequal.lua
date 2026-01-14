@@ -1552,15 +1552,31 @@ end
 --   A) Unit names exist already:  T05_TEA_P1 .. T05_TEA_P4
 --   B) Group templates exist:     groups named T05_TEA_P1 .. T05_TEA_P4 that we clone
 --
-local function rq_getTEACornerZonePoints(taskId)
+local function rq_getTEACornerZonePoints(taskId, aircraftPrefix)
   local pts = {}
   for i=1,4 do
-    local zname = string.format("T%02d_TEA_ZONE%d", taskId, i)
-    local z = trigger.misc.getZone(zname)
+    -- Try prefixed zone name first (e.g., AH64_T02_TEA_ZONE1), fall back to unprefixed (T02_TEA_ZONE1)
+    local zname = nil
+    local z = nil
+
+    if aircraftPrefix then
+      zname = string.format("%s_T%02d_TEA_ZONE%d", aircraftPrefix, taskId, i)
+      z = trigger.misc.getZone(zname)
+      if z and z.point then
+        rq_log(4, "TEA: found prefixed zone " .. zname)
+      end
+    end
+
+    -- Fall back to unprefixed zone name if prefixed not found
+    if not (z and z.point) then
+      zname = string.format("T%02d_TEA_ZONE%d", taskId, i)
+      z = trigger.misc.getZone(zname)
+    end
+
     if z and z.point then
       pts[#pts+1] = { x = z.point.x, z = z.point.z, name = zname }
     else
-      rq_log(2, "TEA: missing corner zone " .. zname)
+      rq_log(2, "TEA: missing corner zone " .. zname .. (aircraftPrefix and (" (also tried " .. aircraftPrefix .. "_" .. zname .. ")") or ""))
     end
   end
   if #pts >= 4 then return pts end
@@ -1599,7 +1615,7 @@ local function rq_getTEAStaticTemplate()
   return RANGEQUAL._teaTemplate
 end
 
-local function rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts)
+local function rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts, aircraftPrefix)
   if not run or not taskId then return nil end
   local tpl = rq_getTEAStaticTemplate()
   if not tpl or not tpl.typeName or not tpl.countryId then
@@ -1607,7 +1623,7 @@ local function rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts)
     return nil
   end
 
-  cornerPts = cornerPts or rq_getTEACornerZonePoints(taskId)
+  cornerPts = cornerPts or rq_getTEACornerZonePoints(taskId, aircraftPrefix)
   if not cornerPts then
     rq_log(2, "TEA: cannot spawn marks (missing corner zones for task " .. tostring(taskId) .. ").")
     return nil
@@ -1718,16 +1734,16 @@ function rq_sortPolyPts(pts)
   return pts
 end
 
-local function rq_buildTEAPolyForTask(run, taskId)
+local function rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
   -- Rocket tasks use TEA corner trigger zones (Txx_TEA_ZONE1..4) to define the polygon.
   -- Visual corner markers are spawned as statics cloned from TEA_TEMPLATE only while the task is active.
   if not run then return nil end
 
-  local cornerPts = rq_getTEACornerZonePoints(taskId)
+  local cornerPts = rq_getTEACornerZonePoints(taskId, aircraftPrefix)
   if not cornerPts then return nil end
 
   -- Spawn visual markers (statics) for this active run/task
-  rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts)
+  rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts, aircraftPrefix)
 
   -- Build polygon points (x,z)
   local poly = {}
@@ -2603,11 +2619,12 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
 
   -- TEA corners for rockets
   if task.type == "ROCKETS" and task.teaCorners then
-    run.teaPoly = rq_buildTEAPolyForTask(run, taskId)
+    run.teaPoly = rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
     if run.teaPoly then
       rq_log(3, string.format("TEA polygon built for task %d with %d corners", taskId, #run.teaPoly))
     else
-      rq_log(1, string.format("ERROR: Failed to build TEA polygon for task %d. Check that zones T%02d_TEA_ZONE1..4 exist.", taskId, taskId))
+      local zoneName = aircraftPrefix and string.format("%s_T%02d_TEA_ZONE1..4", aircraftPrefix, taskId) or string.format("T%02d_TEA_ZONE1..4", taskId)
+      rq_log(1, string.format("ERROR: Failed to build TEA polygon for task %d. Check that zones %s exist.", taskId, zoneName))
       rq_msgToGroup(run.groupId, string.format("ERROR: TEA zones missing for task %d. Check mission editor.", taskId), 15)
     end
   end

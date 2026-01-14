@@ -132,7 +132,7 @@ RANGEQUAL.cfg = {
   ah64 = {
     gunVelocity = 805,  -- M230 30mm chain gun muzzle velocity in m/s
     tasks = {
-      [1] = { id=1,  type="GUN30MM",   targetTemplate="AH64_T01_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=30 }, scoringCurve="GUN_STD", motion="HOVER" },
+      [1] = { id=1,  type="HF_SELF",   targetTemplate="AH64_T01_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
       [2] = { id=2,  type="ROCKETS",   targetTemplate="AH64_T02_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="HOVER" },
       [3] = { id=3,  type="GUN30MM",   targetTemplate="AH64_T03_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=30 }, scoringCurve="GUN_STD", motion="HOVER" },
       [4] = { id=4,  type="HF_SELF",   targetTemplate="AH64_T04_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },

@@ -2424,26 +2424,44 @@ local function rq_spawnTargetsFromTemplate(run, templateName, aircraftPrefix)
 end
 
 local function rq_startTaskForUnit(ownerUnitName, taskId)
+  -- Debug: Function called
+  trigger.action.outText("DEBUG: rq_startTaskForUnit called for " .. tostring(ownerUnitName) .. " task " .. tostring(taskId), 5)
+
   local unit = Unit.getByName(ownerUnitName)
-  if not unit or not unit:isExist() then return end
+  if not unit or not unit:isExist() then
+    trigger.action.outText("DEBUG: Unit not found or doesn't exist", 5)
+    return
+  end
+
   local group = unit:getGroup()
-  if not group or not group:isExist() then return end
+  if not group or not group:isExist() then
+    trigger.action.outText("DEBUG: Group not found or doesn't exist", 5)
+    return
+  end
 
   -- Get aircraft-specific task table
   local aircraftConfig = rq_getAircraftConfig(unit)
   if not aircraftConfig then
     rq_msgToGroup(group:getID(), "ERROR: Aircraft configuration not found", 10)
+    trigger.action.outText("DEBUG: aircraftConfig is nil", 5)
     return
   end
   if not aircraftConfig.tasks then
     rq_msgToGroup(group:getID(), "ERROR: No tasks defined for this aircraft", 10)
+    trigger.action.outText("DEBUG: aircraftConfig.tasks is nil", 5)
     return
   end
+
+  trigger.action.outText("DEBUG: Found " .. tostring(#(aircraftConfig.tasks or {})) .. " tasks in config", 5)
+
   local task = rq_shallowCopy(aircraftConfig.tasks[taskId])
   if not task then
     rq_msgToGroup(group:getID(), string.format("ERROR: Task %d not found for this aircraft", taskId), 10)
+    trigger.action.outText("DEBUG: Task " .. tostring(taskId) .. " not found in aircraftConfig.tasks", 5)
     return
   end
+
+  trigger.action.outText("DEBUG: Task found, proceeding with task start", 5)
 
   -- Range lock: only one aircraft can run (ARMING/HOT) at a time
   local lock = RANGEQUAL._state.rangeLock
@@ -3045,11 +3063,18 @@ rq_ensureMenusForGroup = function(group)
 
       local tid = taskId -- capture loop variable (Lua 5.1 closure safety)
       missionCommands.addCommandForGroup(gid, label, selectMenu, function()
+        -- Debug: Confirm callback is triggered
+        trigger.action.outText("DEBUG: Task " .. tostring(tid) .. " selected", 5)
+
         local liveOwner = getOwnerUnitName()
         if not liveOwner then
           rq_msgToGroup(gid, "Group not active yet (slot not occupied).", 6)
           return
         end
+
+        -- Debug: Show owner unit name
+        trigger.action.outText("DEBUG: Owner unit = " .. tostring(liveOwner), 5)
+
         rq_startTaskForUnit(liveOwner, tid)
       end)
     end

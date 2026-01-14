@@ -100,17 +100,16 @@ Create a **static object** named `TEA_TEMPLATE` (e.g., a cone or marker). The sc
 
 ### 6. Script Integration
 
-1. Create a **DO SCRIPT** trigger at mission start with:
+1. Create a **DO SCRIPT FILE** trigger at mission start with:
    ```lua
    dofile("path/to/rangequal.lua")
    ```
-   Or copy the entire `rangequal.lua` content into the DO SCRIPT action.
-
-2. **(Optional)** Place audio files in `Saved Games\DCS\Missions\[MissionName]\l10n\DEFAULT\` for voice callouts:
-   - `WELCOME.ogg`, `RANGE_HOT.ogg`, `RANGE_CLEAR.ogg`
-   - `HOLD.ogg`, `CLEARED.ogg`
-   - `0.ogg` through `8.ogg` (for laser code callouts, digit "9" is never used)
-   - Foul/result sounds (see `RANGEQUAL_AUDIO_FILES` in script)
+   
+2. **(Optional)** Add audio files:
+   - Create a trigger in the DCS Mission Editor
+   --Triggers: once, no event
+   --Conditions: flag 1 equals 10 (this doesn't matter, just have to put something here)
+   --Actions: one action for each sound file. Use SOUND TO COUNTRY and pick a random country that doesn't appear in the mission.
 
 ## Usage
 
@@ -244,13 +243,8 @@ Add/modify tasks in `RANGEQUAL.cfg.ah64.tasks` or `RANGEQUAL.cfg.oh58.tasks`:
 - Check JTAC and target group names match configuration
 
 ### No F10 menu
-- Ensure script is loaded via DO SCRIPT trigger at mission start
-- Check that aircraft is inside `FIRE_ZONE`
+- Ensure script is loaded via DO SCRIPT FILE trigger at mission start
 - Verify aircraft type is AH-64D or OH-58D
-
-## Credits
-
-**Stains Range Script** - DCS attack helicopter range qualification system
 
 ## License
 

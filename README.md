@@ -4,6 +4,15 @@ A DCS World mission script for attack helicopter range qualification training. P
 
 ## Features
 
+Try the example mission!
+
+Requirements:
+- Nevada terrain
+- OH-58D and/or AH-64D modules
+- [476 vFG - Air Weapons Range Objects](https://www.476vfightergroup.com/downloads.php?do=download&downloadid=482)
+
+## Features
+
 - **Automated Range Control**: "RANGE HOT" / "RANGE CLEAR" announcements with single-shooter lockout
 - **Dynamic Target Spawning**: Targets spawn per task and despawn automatically after completion
 - **Multiple Task Types**: Hellfires (self/remote), rockets, guns, APKWS, and Stinger

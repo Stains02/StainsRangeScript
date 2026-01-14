@@ -26,7 +26,6 @@ RANGEQUAL.cfg = {
     rangeClearDelaySec  = 6.0,  -- seconds; delay after shooter end-state before broadcasting RANGE_CLEAR
     rangeHotThrottleSec = 2.0,  -- seconds; per-group throttle for RANGE_HOT spam
     armingDelaySec      = 10,
-    gunBulletVelocityMs = 805,  -- M230 chain gun muzzle velocity in m/s
     gunEndPadBufferSec  = 3.0,  -- Additional buffer after calculated flight time for impact detection
     successHoldSec      = 2.5,  -- seconds; delay after first terminal effect to bundle multi-kills/messages
     tickSec             = 0.2,
@@ -107,23 +106,60 @@ RANGEQUAL.cfg = {
         [7] = { {43,100},{47,95},{50,90},{53,85},{56,80},{59,75},{62,70},{68,50},{71,30} },
       },
   },
+
+    -- APKWS (laser-guided rockets - range-banded like HF_SELF for future tuning)
+    APKWS_STD = {
+      [1] = { {15,100},{17,95},{18,90},{19,85},{20,80},{21,75},{22,70},{24,50},{25,30} },
+      [2] = { {19,100},{20,95},{22,90},{23,85},{24,80},{26,75},{27,70},{30,50},{31,30} },
+      [3] = { {23,100},{25,95},{26,90},{28,85},{30,80},{31,75},{33,70},{36,50},{38,30} },
+      [4] = { {28,100},{30,95},{32,90},{34,85},{36,80},{38,75},{40,70},{44,50},{46,30} },
+      [5] = { {34,100},{36,95},{38,90},{41,85},{43,80},{46,75},{48,70},{53,50},{55,30} },
+      [6] = { {39,100},{42,95},{45,90},{48,85},{50,80},{53,75},{56,70},{62,50},{64,30} },
+      [7] = { {46,100},{50,95},{53,90},{56,85},{59,80},{63,75},{66,70},{73,50},{76,30} },
+    },
+
+    -- STINGER (copy of HF_REMOTE for future tuning)
+    STINGER_STD = {
+      {40,100},{42,98},{44,96},{46,94},{48,92},{50,90},{52,88},{54,86},{56,84},{58,82},
+      {60,80},{62,78},{64,76},{66,74},{68,72},{70,70},{76,50},{80,30},
+    },
   },
 
   ----------------------------------------------------------------
-  -- TASK DEFINITIONS
+  -- AIRCRAFT CONFIGURATIONS
   -- targetTemplate can be either a unit-group name OR a static-group name
   ----------------------------------------------------------------
-  tasks = {
-    [1] = { id=1,  type="HF_SELF",   targetTemplate="T01_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
-    [2] = { id=2,  type="ROCKETS",   targetTemplate="T02_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="HOVER" },
-    [3] = { id=3,  type="GUN",       targetTemplate="T03_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=30 }, scoringCurve="GUN_STD", motion="HOVER" },
-    [4] = { id=4,  type="HF_SELF",   targetTemplate="T04_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
-    [5] = { id=5,  type="ROCKETS",   targetTemplate="T05_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="HOVER" },
-    [6] = { id=6,  type="HF_SELF",   targetTemplate="T06_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
-    [7] = { id=7,  type="HF_REMOTE", targetTemplate="T07_TARGET", jtacTemplate="T07_JTAC", laserCode=1688, allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_REMOTE", motion="HOVER" },
-    [8] = { id=8,  type="GUN",       targetTemplate="T08_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=40 }, scoringCurve="GUN_STD", motion="HOVER" },
-    [9] = { id=9,  type="GUN",       targetTemplate="T09_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=30 }, scoringCurve="GUN_STD", motion="MOVE" },
-    [10]= { id=10, type="ROCKETS",   targetTemplate="T10_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=8 }, rocketCurve="ROCKET_STD", motion="HOVER" },
+  ah64 = {
+    gunVelocity = 805,  -- M230 30mm chain gun muzzle velocity in m/s
+    tasks = {
+      [1] = { id=1,  type="HF_SELF",   targetTemplate="AH64_T01_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
+      [2] = { id=2,  type="ROCKETS",   targetTemplate="AH64_T02_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="HOVER" },
+      [3] = { id=3,  type="GUN30MM",   targetTemplate="AH64_T03_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=30 }, scoringCurve="GUN_STD", motion="HOVER" },
+      [4] = { id=4,  type="HF_SELF",   targetTemplate="AH64_T04_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
+      [5] = { id=5,  type="ROCKETS",   targetTemplate="AH64_T05_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="HOVER" },
+      [6] = { id=6,  type="HF_SELF",   targetTemplate="AH64_T06_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
+      [7] = { id=7,  type="HF_REMOTE", targetTemplate="AH64_T07_TARGET", jtacTemplate="AH64_T07_JTAC", laserCode=1688, allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_REMOTE", motion="HOVER" },
+      [8] = { id=8,  type="GUN30MM",   targetTemplate="AH64_T08_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=40 }, scoringCurve="GUN_STD", motion="HOVER" },
+      [9] = { id=9,  type="GUN30MM",   targetTemplate="AH64_T09_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=30 }, scoringCurve="GUN_STD", motion="MOVE" },
+      [10]= { id=10, type="ROCKETS",   targetTemplate="AH64_T10_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=8 }, rocketCurve="ROCKET_STD", motion="HOVER" },
+    }
+  },
+
+  oh58 = {
+    gunVelocity = 887,  -- .50 cal machine gun muzzle velocity in m/s (2910 ft/s)
+    m4Velocity = 900,   -- M4 rifle muzzle velocity in m/s (5.56mm NATO)
+    tasks = {
+      [1] = { id=1,  type="HF_SELF",   targetTemplate="OH58_T01_TARGET", allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_SELF", motion="HOVER" },
+      [2] = { id=2,  type="HF_REMOTE", targetTemplate="OH58_T02_TARGET", jtacTemplate="OH58_T02_JTAC", laserCode=1688, allowed={ hellfires=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="HF_REMOTE", motion="HOVER" },
+      [3] = { id=3,  type="GUN50CAL",  targetTemplate="OH58_T03_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=100 }, scoringCurve="GUN_STD", motion="MOVE" },
+      [4] = { id=4,  type="GUN50CAL",  targetTemplate="OH58_T04_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=100 }, scoringCurve="GUN_STD", motion="MOVE" },
+      [5] = { id=5,  type="ROCKETS",   targetTemplate="OH58_T05_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=6 }, rocketCurve="ROCKET_STD", motion="MOVE" },
+      [6] = { id=6,  type="ROCKETS",   targetTemplate="OH58_T06_TARGET", teaCorners=true, requiredInZoneImpacts=2, allowed={ rockets=8 }, rocketCurve="ROCKET_STD", motion="MOVE" },
+      [7] = { id=7,  type="GUNM4",     targetTemplate="OH58_T07_TARGET", terminalEffect="DAMAGE_ANY", allowed={ gunRounds=999 }, scoringCurve="GUN_STD", motion="HOVER" },
+      [8] = { id=8,  type="APKWS",     targetTemplate="OH58_T08_TARGET", allowed={ apkws=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="APKWS_STD", motion="HOVER" },
+      [9] = { id=9,  type="APKWS",     targetTemplate="OH58_T09_TARGET", allowed={ apkws=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="APKWS_STD", motion="HOVER" },
+      [10]= { id=10, type="STINGER",   targetTemplate="OH58_T10_TARGET", allowed={ stingers=1 }, terminalEffect="DAMAGE_ANY", scoringCurve="STINGER_STD", motion="HOVER" },
+    }
   }
 }
 
@@ -186,7 +222,7 @@ local function rq_now() return timer.getTime() end
 local function rq_roundSec(t) return math.floor((t or 0) + 0.5) end
 
 -- Logging (silent by default). Set RQ_LOG_LEVEL > 0 to enable.
-local RQ_LOG_LEVEL = 0 -- 0=off, 1=error, 2=warn, 3=info, 4=debug (set to 4 for cleanup testing)
+local RQ_LOG_LEVEL = 0 -- 0=off, 1=error, 2=warn, 3=info, 4=debug
 local function rq_log(level, msg)
   if level <= (RQ_LOG_LEVEL or 0) then
     trigger.action.outText("[RQ] " .. tostring(msg), 6)
@@ -223,29 +259,7 @@ local function rq_setOcc(unitName, val)
   end
 end
 
-local function rq_wipeUnitSlate(unitName, reason)
-  if not unitName or not RANGEQUAL._state then return end
-
-  -- Clear lock if held by this unit
-  if RANGEQUAL._state.rangeLock and RANGEQUAL._state.rangeLock.ownerUnitName == unitName then
-    RANGEQUAL._state.rangeLock.busy = false
-    RANGEQUAL._state.rangeLock.ownerUnitName = nil
-    RANGEQUAL._state.rangeLock.taskId = nil
-  end
-
-  -- Clear run + scoring
-  if RANGEQUAL._state.perUnit then RANGEQUAL._state.perUnit[unitName] = nil end
-  if RANGEQUAL._state.score then RANGEQUAL._state.score[unitName] = nil end
-
-  -- Clear markers + WELCOME/timing
-  rq_clearUnitMarks(unitName)
-  if RANGEQUAL._state.welcomeHeard then RANGEQUAL._state.welcomeHeard[unitName] = nil end
-  if RANGEQUAL._state.qualStartTime then RANGEQUAL._state.qualStartTime[unitName] = nil end
-  if RANGEQUAL._state.perfectElapsed then RANGEQUAL._state.perfectElapsed[unitName] = nil end
-
-  rq_log(3, string.format("Slate wiped for %s (%s)", tostring(unitName), tostring(reason or "unit_gone")))
-  rq_setOcc(unitName, 0)
-end
+-- rq_wipeUnitSlate moved to after rq_endRunNow to avoid forward reference issues
 
 
 local function rq_nextMarkId()
@@ -281,6 +295,7 @@ local function rq_markRocketImpact(run, impactPoint, isHit)
   if not yy or yy == 0 then yy = land.getHeight({x=impactPoint.x, y=impactPoint.z}) end
   trigger.action.markToAll(mid, txt, {x=impactPoint.x, y=yy, z=impactPoint.z}, true)
   lst[#lst+1] = mid
+  rq_log(3, string.format("Rocket impact marked: %s at (%.0f, %.0f)", label, impactPoint.x, impactPoint.z))
 end
 
 local function rq_getGroundSpeedKt(unit)
@@ -303,6 +318,17 @@ local function rq_motionOk(task, unit)
   else
     return gs < hoverMax
   end
+end
+
+-- Extract aircraft type prefix for template names (e.g., "AH-64D" -> "AH64")
+local function rq_getAircraftPrefix(unit)
+  if not unit or not unit.getTypeName then return nil end
+  local typeName = unit:getTypeName()
+  if not typeName then return nil end
+
+  -- Remove hyphens and extract prefix (e.g., "AH-64D" -> "AH64", "OH-58D" -> "OH58")
+  local prefix = typeName:gsub("%-", ""):match("^([A-Z]+%d+)")
+  return prefix
 end
 
 
@@ -349,9 +375,9 @@ local function rq_computeAutoBandOnce(run, shooterUnit)
     return
   end
 
-  -- Only for ROCKETS and HF_SELF (autonomous Hellfire)
+  -- Only for ROCKETS, HF_SELF (autonomous Hellfire), and APKWS
   local t = run.task and run.task.type
-  if t ~= "ROCKETS" and t ~= "HF_SELF" then
+  if t ~= "ROCKETS" and t ~= "HF_SELF" and t ~= "APKWS" then
     run.autoBandComputed = true
     return
   end
@@ -383,6 +409,8 @@ local function rq_computeAutoBandOnce(run, shooterUnit)
       run.rocketRangeBandAuto = band
     elseif t == "HF_SELF" then
       run.hfRangeBandAuto = band
+    elseif t == "APKWS" then
+      run.apkwsRangeBandAuto = band
     end
     rq_log(4, string.format("AutoBand: task %s band %d (%.0fm) closest %s", tostring(run.taskId), band, bestD, tostring(bestName)))
   end
@@ -487,6 +515,7 @@ local RQ_OUTCOME_SOUNDS = {
   NO_EFFECT         = "NO_EFFECT.ogg",
   EFFECT            = "EFFECT.ogg",
   IDLE_TIMEOUT      = "IDLE_TIMEOUT.ogg",
+  UNIT_LOST         = "NO_EFFECT.ogg",  -- Use NO_EFFECT sound when unit disappears
 }
 
 -- ===========================================================
@@ -520,20 +549,37 @@ local RQ_LASER_RANGES = {
 }
 
 -- Generate a random laser code uniformly across all valid codes in the ranges above.
+-- Excludes any code containing the digit "9".
 local function rq_generateLaserCode()
   local total = 0
   for _, r in ipairs(RQ_LASER_RANGES) do
     total = total + (r[2] - r[1] + 1)
   end
-  local pick = math.random(total)
-  for _, r in ipairs(RQ_LASER_RANGES) do
-    local n = (r[2] - r[1] + 1)
-    if pick <= n then
-      return r[1] + (pick - 1)
+
+  -- Try up to 100 times to generate a code without the digit "9"
+  for attempt = 1, 100 do
+    local pick = math.random(total)
+    local code = nil
+
+    for _, r in ipairs(RQ_LASER_RANGES) do
+      local n = (r[2] - r[1] + 1)
+      if pick <= n then
+        code = r[1] + (pick - 1)
+        break
+      end
+      pick = pick - n
     end
-    pick = pick - n
+
+    -- Check if the code contains the digit "9"
+    if code then
+      local codeStr = tostring(code)
+      if not codeStr:find("9") then
+        return code
+      end
+    end
   end
-  -- Fallback (should never happen)
+
+  -- Fallback (should rarely happen) - return a safe code without "9"
   return 1688
 end
 
@@ -998,15 +1044,19 @@ end
 ----------------------------------------------------------------
 local function rq_lookupCurveLinear(curve, t)
   for _, row in ipairs(curve or {}) do
-    local maxT, pts = row[1], row[2]
-    if t <= maxT then return pts end
+    if row and row[1] and row[2] then
+      local maxT, pts = row[1], row[2]
+      if t <= maxT then return pts end
+    end
   end
   return 0
 end
 
 local function rq_getZeroCutoffFromCurve(curve)
   if not curve or #curve == 0 then return 0 end
-  return curve[#curve][1]
+  local lastRow = curve[#curve]
+  if not lastRow or not lastRow[1] then return 0 end
+  return lastRow[1]
 end
 
 local function rq_ceilDiv(a,b)
@@ -1519,15 +1569,31 @@ end
 --   A) Unit names exist already:  T05_TEA_P1 .. T05_TEA_P4
 --   B) Group templates exist:     groups named T05_TEA_P1 .. T05_TEA_P4 that we clone
 --
-local function rq_getTEACornerZonePoints(taskId)
+local function rq_getTEACornerZonePoints(taskId, aircraftPrefix)
   local pts = {}
   for i=1,4 do
-    local zname = string.format("T%02d_TEA_ZONE%d", taskId, i)
-    local z = trigger.misc.getZone(zname)
+    -- Try prefixed zone name first (e.g., AH64_T02_TEA_ZONE1), fall back to unprefixed (T02_TEA_ZONE1)
+    local zname = nil
+    local z = nil
+
+    if aircraftPrefix then
+      zname = string.format("%s_T%02d_TEA_ZONE%d", aircraftPrefix, taskId, i)
+      z = trigger.misc.getZone(zname)
+      if z and z.point then
+        rq_log(4, "TEA: found prefixed zone " .. zname)
+      end
+    end
+
+    -- Fall back to unprefixed zone name if prefixed not found
+    if not (z and z.point) then
+      zname = string.format("T%02d_TEA_ZONE%d", taskId, i)
+      z = trigger.misc.getZone(zname)
+    end
+
     if z and z.point then
       pts[#pts+1] = { x = z.point.x, z = z.point.z, name = zname }
     else
-      rq_log(2, "TEA: missing corner zone " .. zname)
+      rq_log(2, "TEA: missing corner zone " .. zname .. (aircraftPrefix and (" (also tried " .. aircraftPrefix .. "_" .. zname .. ")") or ""))
     end
   end
   if #pts >= 4 then return pts end
@@ -1554,7 +1620,7 @@ local function rq_getTEAStaticTemplate()
   local heading = 0
   if tpl.getPosition then
     local pos = tpl:getPosition()
-    if pos and pos.x then
+    if pos and pos.x and pos.x.z and pos.x.x then
       -- heading around y-axis from x-axis vector
       heading = math.atan2(pos.x.z, pos.x.x)
     end
@@ -1566,7 +1632,7 @@ local function rq_getTEAStaticTemplate()
   return RANGEQUAL._teaTemplate
 end
 
-local function rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts)
+local function rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts, aircraftPrefix)
   if not run or not taskId then return nil end
   local tpl = rq_getTEAStaticTemplate()
   if not tpl or not tpl.typeName or not tpl.countryId then
@@ -1574,7 +1640,7 @@ local function rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts)
     return nil
   end
 
-  cornerPts = cornerPts or rq_getTEACornerZonePoints(taskId)
+  cornerPts = cornerPts or rq_getTEACornerZonePoints(taskId, aircraftPrefix)
   if not cornerPts then
     rq_log(2, "TEA: cannot spawn marks (missing corner zones for task " .. tostring(taskId) .. ").")
     return nil
@@ -1685,16 +1751,16 @@ function rq_sortPolyPts(pts)
   return pts
 end
 
-local function rq_buildTEAPolyForTask(run, taskId)
+local function rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
   -- Rocket tasks use TEA corner trigger zones (Txx_TEA_ZONE1..4) to define the polygon.
   -- Visual corner markers are spawned as statics cloned from TEA_TEMPLATE only while the task is active.
   if not run then return nil end
 
-  local cornerPts = rq_getTEACornerZonePoints(taskId)
+  local cornerPts = rq_getTEACornerZonePoints(taskId, aircraftPrefix)
   if not cornerPts then return nil end
 
   -- Spawn visual markers (statics) for this active run/task
-  rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts)
+  rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts, aircraftPrefix)
 
   -- Build polygon points (x,z)
   local poly = {}
@@ -1720,6 +1786,38 @@ local function rq_getHellfireRemaining(unit)
     if a and a.desc and a.desc.category == Weapon.Category.MISSILE then
       local dn = ((a.desc.displayName or a.desc.typeName or ""):lower())
       if dn:find("agm") or dn:find("hellfire") or dn:find("114") then
+        count = count + (a.count or 0)
+      end
+    end
+  end
+  return count
+end
+
+local function rq_getAPKWSRemaining(unit)
+  if not unit or not unit.getAmmo then return nil end
+  local ammo = unit:getAmmo() or {}
+  local count = 0
+  for _, a in ipairs(ammo) do
+    if a and a.desc then
+      local dn = ((a.desc.displayName or a.desc.typeName or ""):lower())
+      if dn:find("apkws") or dn:find("advanced precision") then
+        count = count + (a.count or 0)
+      elseif a.desc.category == Weapon.Category.ROCKET and dn:find("guided") then
+        count = count + (a.count or 0)
+      end
+    end
+  end
+  return count
+end
+
+local function rq_getStingerRemaining(unit)
+  if not unit or not unit.getAmmo then return nil end
+  local ammo = unit:getAmmo() or {}
+  local count = 0
+  for _, a in ipairs(ammo) do
+    if a and a.desc and a.desc.category == Weapon.Category.MISSILE then
+      local dn = ((a.desc.displayName or a.desc.typeName or ""):lower())
+      if dn:find("stinger") or dn:find("fim-92") or dn:find("fim92") or dn:find("atas") then
         count = count + (a.count or 0)
       end
     end
@@ -1771,6 +1869,68 @@ local function rq_weaponIsGunShell(weapon)
   return desc.category == Weapon.Category.SHELL
 end
 
+-- Specific gun type detection for different aircraft
+local function rq_weaponIsGun30mm(weapon)
+  if not weapon or not weapon:isExist() then return false end
+  local desc = weapon:getDesc()
+  if not desc then return false end
+  if desc.category ~= Weapon.Category.SHELL then return false end
+  local dn = ((desc.displayName or desc.typeName or ""):lower())
+  -- M230 30mm chain gun
+  if dn:find("m230", 1, true) or dn:find("30mm", 1, true) or dn:find("30 mm", 1, true) then return true end
+  return false
+end
+
+local function rq_weaponIsGun50cal(weapon)
+  if not weapon or not weapon:isExist() then return false end
+  local desc = weapon:getDesc()
+  if not desc then return false end
+  if desc.category ~= Weapon.Category.SHELL then return false end
+  local dn = ((desc.displayName or desc.typeName or ""):lower())
+  -- .50 cal machine gun
+  if dn:find("50 cal", 1, true) or dn:find(".50", 1, true) or dn:find("m2", 1, true) then return true end
+  if dn:find("12.7", 1, true) or dn:find("12.7mm", 1, true) then return true end
+  return false
+end
+
+local function rq_weaponIsGunM4(weapon)
+  if not weapon or not weapon:isExist() then return false end
+  local desc = weapon:getDesc()
+  if not desc then return false end
+  if desc.category ~= Weapon.Category.SHELL then return false end
+  local dn = ((desc.displayName or desc.typeName or ""):lower())
+  -- M4 rifle (5.56mm)
+  if dn:find("m4", 1, true) or dn:find("5.56", 1, true) then return true end
+  if dn:find("rifle", 1, true) then return true end
+  return false
+end
+
+local function rq_weaponIsAPKWS(weapon)
+  if not weapon or not weapon:isExist() then return false end
+  local desc = weapon:getDesc()
+  if not desc then return false end
+  local dn = ((desc.displayName or desc.typeName or ""):lower())
+  -- APKWS (Advanced Precision Kill Weapon System) - laser-guided rocket
+  if dn:find("apkws", 1, true) then return true end
+  if dn:find("advanced precision", 1, true) then return true end
+  -- Some missions may label as guided rocket
+  if desc.category == Weapon.Category.ROCKET and dn:find("guided", 1, true) then return true end
+  return false
+end
+
+local function rq_weaponIsStinger(weapon)
+  if not weapon or not weapon:isExist() then return false end
+  local desc = weapon:getDesc()
+  if not desc then return false end
+  if desc.category ~= Weapon.Category.MISSILE then return false end
+  local dn = ((desc.displayName or desc.typeName or ""):lower())
+  -- Stinger air-to-air missile (FIM-92)
+  if dn:find("stinger", 1, true) then return true end
+  if dn:find("fim-92", 1, true) or dn:find("fim92", 1, true) then return true end
+  if dn:find("atas", 1, true) then return true end  -- Air-To-Air Stinger
+  return false
+end
+
 -- Returns true if this release is allowed for the current task.
 -- Note: gun tasks are primarily enforced via S_EVENT_SHOOTING_START (no weapon object).
 local function rq_isAllowedWeaponForTask(task, weapon)
@@ -1781,11 +1941,22 @@ local function rq_isAllowedWeaponForTask(task, weapon)
 
   local tt = task.type
   if tt == "ROCKETS" then
-    return rq_weaponIsRocket(weapon)
+    -- APKWS must be checked first before generic rockets
+    return rq_weaponIsRocket(weapon) and not rq_weaponIsAPKWS(weapon)
+  elseif tt == "APKWS" then
+    return rq_weaponIsAPKWS(weapon)
   elseif tt == "HF_SELF" or tt == "HF_REMOTE" then
     return rq_weaponIsHellfire(weapon)
+  elseif tt == "STINGER" then
+    return rq_weaponIsStinger(weapon)
+  elseif tt == "GUN30MM" then
+    return rq_weaponIsGun30mm(weapon)
+  elseif tt == "GUN50CAL" then
+    return rq_weaponIsGun50cal(weapon)
+  elseif tt == "GUNM4" then
+    return rq_weaponIsGunM4(weapon)
   elseif tt == "GUN" then
-    -- Some aircraft may emit S_EVENT_SHOT for shells; allow those.
+    -- Legacy gun type - allow any gun shell
     return rq_weaponIsGunShell(weapon)
   end
   return false
@@ -1802,7 +1973,10 @@ local function rq_tickWeaponTracking(run)
 
   local remaining = {}
   local teaVerts = run.teaPoly
-  if not teaVerts or #teaVerts < 3 then return end
+  if not teaVerts or #teaVerts < 3 then
+    rq_log(2, string.format("WARNING: Cannot track rockets - TEA polygon missing or invalid (%s)", teaVerts and "too few verts" or "nil"))
+    return
+  end
 
   for i=1,#run.weaponTrack do
     local wrec = run.weaponTrack[i]
@@ -1817,6 +1991,7 @@ local function rq_tickWeaponTracking(run)
     else
       if wrec.last then
         local inside = rq_pointInPoly({x=wrec.last.x, z=wrec.last.z}, teaVerts)
+        rq_log(3, string.format("Rocket impact detected at (%.0f, %.0f) - %s TEA", wrec.last.x, wrec.last.z, inside and "INSIDE" or "OUTSIDE"))
         if inside then
           rq_markRocketImpact(run, {x=wrec.last.x, y=0, z=wrec.last.z}, true)
         else
@@ -1879,14 +2054,21 @@ end
 ----------------------------------------------------------------
 local function rq_computeMaxWaitSec(run)
   if not run or not run.task then return 0 end
-  if run.task.type == "HF_SELF" then
+  local taskType = run.task.type
+
+  if taskType == "HF_SELF" then
     local band = run.hfRangeBandAuto or 7
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.HF_SELF[band] or {})
-  elseif run.task.type == "HF_REMOTE" then
+  elseif taskType == "HF_REMOTE" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.HF_REMOTE or {})
-  elseif run.task.type == "GUN" then
+  elseif taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.GUN_STD or {})
-  elseif run.task.type == "ROCKETS" then
+  elseif taskType == "APKWS" then
+    local band = run.apkwsRangeBandAuto or 7
+    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.APKWS_STD[band] or {})
+  elseif taskType == "STINGER" then
+    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.STINGER_STD or {})
+  elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
     local scoringPairs = rq_ceilDiv(allowedRockets, 2)
     local band = run.rocketRangeBandAuto or 7
@@ -1901,14 +2083,19 @@ end
 local function rq_computeDynamicTimeout(run)
   if not run or not run.task then return 120 end  -- Fallback to old default
   local band = run.timeoutRangeBand or 7
-  
-  if run.task.type == "HF_SELF" then
+  local taskType = run.task.type
+
+  if taskType == "HF_SELF" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.HF_SELF[band] or {})
-  elseif run.task.type == "HF_REMOTE" then
+  elseif taskType == "HF_REMOTE" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.HF_REMOTE or {})
-  elseif run.task.type == "GUN" then
+  elseif taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" then
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.GUN_STD or {})
-  elseif run.task.type == "ROCKETS" then
+  elseif taskType == "APKWS" then
+    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.APKWS_STD[band] or {})
+  elseif taskType == "STINGER" then
+    return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.STINGER_STD or {})
+  elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
     local scoringPairs = rq_ceilDiv(allowedRockets, 2)
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
@@ -1920,14 +2107,31 @@ end
 
 -- Dynamic gun end pad based on bullet flight time to target
 local function rq_computeGunEndPad(run)
-  if not run or not run.task or run.task.type ~= "GUN" then
+  if not run or not run.task then
     return 15  -- Fallback to old default for non-gun tasks
   end
-  
+
+  local taskType = run.task.type
+  local isGunTask = (taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4")
+  if not isGunTask then
+    return 15  -- Fallback for non-gun tasks
+  end
+
   local rangeM = run.timeoutRangeM or 7000  -- Use range calculated at task selection
   local gcfg = RANGEQUAL.cfg and RANGEQUAL.cfg.globals or {}
-  local bulletVel = gcfg.gunBulletVelocityMs or 805  -- m/s
   local buffer = gcfg.gunEndPadBufferSec or 2.0  -- seconds
+
+  -- Get aircraft-specific gun velocity
+  local ownerUnit = Unit.getByName(run.ownerUnitName)
+  local bulletVel = 805  -- Default fallback
+  if ownerUnit and ownerUnit:isExist() then
+    local aircraftConfig = rq_getAircraftConfig(ownerUnit)
+    if taskType == "GUNM4" and aircraftConfig.m4Velocity then
+      bulletVel = aircraftConfig.m4Velocity
+    elseif aircraftConfig.gunVelocity then
+      bulletVel = aircraftConfig.gunVelocity
+    end
+  end
 
   if bulletVel == 0 then
     return 15  -- Fallback to default if bullet velocity is zero
@@ -1940,14 +2144,21 @@ local function rq_computeGunEndPad(run)
 end
 
 local function rq_scoreFromTables(run, elapsedSec)
-  if run.task.type == "HF_SELF" then
+  local taskType = run.task.type
+
+  if taskType == "HF_SELF" then
     local band = run.hfRangeBandAuto or 7
     return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.HF_SELF[band] or {}, elapsedSec)
-  elseif run.task.type == "HF_REMOTE" then
+  elseif taskType == "HF_REMOTE" then
     return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.HF_REMOTE or {}, elapsedSec)
-  elseif run.task.type == "GUN" then
+  elseif taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" then
     return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.GUN_STD or {}, elapsedSec)
-  elseif run.task.type == "ROCKETS" then
+  elseif taskType == "APKWS" then
+    local band = run.apkwsRangeBandAuto or 7
+    return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.APKWS_STD[band] or {}, elapsedSec)
+  elseif taskType == "STINGER" then
+    return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.STINGER_STD or {}, elapsedSec)
+  elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
     local scoringPairs = rq_ceilDiv(allowedRockets, 2)
     local band = run.rocketRangeBandAuto or 7
@@ -1981,7 +2192,10 @@ local function rq_endRunNow(run, reason, elapsedOverride)
   if reason == "EFFECT" then
     points = rq_scoreFromTables(run, elapsed)
 
-    if run.task.type == "GUN" and unit and unit:isExist() then
+    -- Check ammo count for gun tasks (except GUNM4 which has unlimited ammo)
+    local taskType = run.task.type
+    local isGunTask = (taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL")
+    if isGunTask and unit and unit:isExist() then
       local ammoEnd = rq_getGunAmmo(unit)
       local spent = (run.gunAmmoStart or ammoEnd) - ammoEnd
       local allowed = run.task.allowed and run.task.allowed.gunRounds or 0
@@ -2179,37 +2393,120 @@ local function rq_targetsDamagedOrDead(run)
 end
 
 
-local function rq_spawnTargetsFromTemplate(run, templateName)
+local function rq_spawnTargetsFromTemplate(run, templateName, aircraftPrefix)
   run.targets = {}
   run.spawnedGroups = {}
   run.spawnedStatics = {}
 
-  -- Try unit-group template first
-  local gname = rq_spawnGroupFromTemplate(templateName)
-  if gname then
-    run.spawnedGroups[#run.spawnedGroups+1] = gname
-    local g = Group.getByName(gname)
-    if g and g:isExist() then
-      for _, u in ipairs(g:getUnits() or {}) do
-        if u and u:isExist() then
-          run.targets[#run.targets+1] = {kind="unit", name=u:getName()}
-        end
-      end
-    end
-    return true
+  -- If aircraft prefix is provided, try prefixed template first (e.g., "AH64_T01_TARGET")
+  local prefixedName = nil
+  if aircraftPrefix then
+    prefixedName = aircraftPrefix .. "_" .. templateName
   end
 
-  -- Otherwise try static-group template
-  local snames = rq_spawnStaticGroupFromTemplate(templateName)
-  if snames and type(snames) == "table" then
-    for _, sname in ipairs(snames) do
-      run.spawnedStatics[#run.spawnedStatics+1] = sname
-      run.targets[#run.targets+1] = {kind="static", name=sname}
+  -- Try unit-group template (prefixed first if available, then fallback to original)
+  for _, tname in ipairs({prefixedName, templateName}) do
+    if tname then
+      local gname = rq_spawnGroupFromTemplate(tname)
+      if gname then
+        run.spawnedGroups[#run.spawnedGroups+1] = gname
+        local g = Group.getByName(gname)
+        if g and g:isExist() then
+          for _, u in ipairs(g:getUnits() or {}) do
+            if u and u:isExist() then
+              run.targets[#run.targets+1] = {kind="unit", name=u:getName()}
+            end
+          end
+        end
+        return true
+      end
     end
-    return true
+  end
+
+  -- Otherwise try static-group template (prefixed first if available, then fallback to original)
+  for _, tname in ipairs({prefixedName, templateName}) do
+    if tname then
+      local snames = rq_spawnStaticGroupFromTemplate(tname)
+      if snames and type(snames) == "table" then
+        for _, sname in ipairs(snames) do
+          run.spawnedStatics[#run.spawnedStatics+1] = sname
+          run.targets[#run.targets+1] = {kind="static", name=sname}
+        end
+        return true
+      end
+    end
   end
 
   return false
+end
+
+----------------------------------------------------------------
+-- WIPE UNIT SLATE (called when player leaves aircraft)
+----------------------------------------------------------------
+local function rq_wipeUnitSlate(unitName, reason)
+  if not unitName or not RANGEQUAL._state then return end
+
+  -- If there's an active run, end it properly (cleanup targets, play RANGE_CLEAR, etc.)
+  local run = RANGEQUAL._state.perUnit and RANGEQUAL._state.perUnit[unitName]
+  if run then
+    rq_endRunNow(run, "UNIT_LOST")
+  end
+
+  -- Clear lock if held by this unit (may be redundant if rq_endRunNow was called, but defensive)
+  if RANGEQUAL._state.rangeLock and RANGEQUAL._state.rangeLock.ownerUnitName == unitName then
+    RANGEQUAL._state.rangeLock.busy = false
+    RANGEQUAL._state.rangeLock.ownerUnitName = nil
+    RANGEQUAL._state.rangeLock.taskId = nil
+  end
+
+  -- Clear run + scoring
+  if RANGEQUAL._state.perUnit then RANGEQUAL._state.perUnit[unitName] = nil end
+  if RANGEQUAL._state.score then RANGEQUAL._state.score[unitName] = nil end
+
+  -- Clear markers + WELCOME/timing
+  rq_clearUnitMarks(unitName)
+  if RANGEQUAL._state.welcomeHeard then RANGEQUAL._state.welcomeHeard[unitName] = nil end
+  if RANGEQUAL._state.qualStartTime then RANGEQUAL._state.qualStartTime[unitName] = nil end
+  if RANGEQUAL._state.perfectElapsed then RANGEQUAL._state.perfectElapsed[unitName] = nil end
+
+  rq_log(3, string.format("Slate wiped for %s (%s)", tostring(unitName), tostring(reason or "unit_gone")))
+  rq_setOcc(unitName, 0)
+end
+
+----------------------------------------------------------------
+-- AIRCRAFT TYPE DETECTION
+----------------------------------------------------------------
+local function rq_getAircraftType(unit)
+  if not unit or not unit:isExist() then return nil end
+  local typeName = unit:getTypeName()
+  if not typeName then return nil end
+
+  local tn = typeName:lower()
+
+  -- OH-58D Kiowa Warrior
+  if tn:find("oh-58", 1, true) or tn:find("oh58", 1, true) or tn:find("kiowa", 1, true) then
+    return "oh58"
+  end
+
+  -- AH-64D Apache
+  if tn:find("ah-64", 1, true) or tn:find("ah64", 1, true) or tn:find("apache", 1, true) then
+    return "ah64"
+  end
+
+  -- Default to AH-64 for backwards compatibility with existing missions
+  return "ah64"
+end
+
+local function rq_getAircraftConfig(unit)
+  if not unit or not unit:isExist() then return nil end
+  local aircraftType = rq_getAircraftType(unit)
+  if not aircraftType then return nil end
+
+  if aircraftType == "oh58" then
+    return RANGEQUAL.cfg.oh58
+  else
+    return RANGEQUAL.cfg.ah64
+  end
 end
 
 local function rq_startTaskForUnit(ownerUnitName, taskId)
@@ -2218,8 +2515,21 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
   local group = unit:getGroup()
   if not group or not group:isExist() then return end
 
-  local task = rq_shallowCopy(RANGEQUAL.cfg.tasks[taskId])
-  if not task then return end
+  -- Get aircraft-specific task table
+  local aircraftConfig = rq_getAircraftConfig(unit)
+  if not aircraftConfig then
+    rq_msgToGroup(group:getID(), "ERROR: Aircraft configuration not found", 10)
+    return
+  end
+  if not aircraftConfig.tasks then
+    rq_msgToGroup(group:getID(), "ERROR: No tasks defined for this aircraft", 10)
+    return
+  end
+  local task = rq_shallowCopy(aircraftConfig.tasks[taskId])
+  if not task then
+    rq_msgToGroup(group:getID(), string.format("ERROR: Task %d not found for this aircraft", taskId), 10)
+    return
+  end
 
   -- Range lock: only one aircraft can run (ARMING/HOT) at a time
   local lock = RANGEQUAL._state.rangeLock
@@ -2281,7 +2591,7 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
     qualified      = false,
     qualifyTime     = nil,
 
-    gunAmmoStart   = (task.type == "GUN") and rq_getGunAmmo(unit) or nil,
+    gunAmmoStart   = (task.type == "GUN" or task.type == "GUN30MM" or task.type == "GUN50CAL" or task.type == "GUNM4") and rq_getGunAmmo(unit) or nil,
 
     targetLife     = {},
     weaponTrack    = {},
@@ -2296,8 +2606,10 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
     run.task.laserCode = rq_generateLaserCode()
   end
 
+  -- Get aircraft type prefix for template naming (e.g., "AH64" for Apache, "OH58" for Kiowa)
+  local aircraftPrefix = rq_getAircraftPrefix(unit)
 
-  local ok = rq_spawnTargetsFromTemplate(run, task.targetTemplate)
+  local ok = rq_spawnTargetsFromTemplate(run, task.targetTemplate, aircraftPrefix)
   if not ok then
     rq_msgToGroup(run.groupId, "Template not found (group or static-group): " .. tostring(task.targetTemplate), 10)
     return
@@ -2308,7 +2620,14 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
   -- Spawn JTAC for remote HF
   if task.type == "HF_REMOTE" and task.jtacTemplate and run.spawnedGroups and run.spawnedGroups[1] then
     local targetGroupName = run.spawnedGroups[1] -- remote HF target must be a UNIT GROUP
-    local jtacName = rq_spawnGroupFromTemplate(task.jtacTemplate)
+    -- Try prefixed JTAC template first, fallback to original
+    local jtacName = nil
+    if aircraftPrefix then
+      jtacName = rq_spawnGroupFromTemplate(aircraftPrefix .. "_" .. task.jtacTemplate)
+    end
+    if not jtacName then
+      jtacName = rq_spawnGroupFromTemplate(task.jtacTemplate)
+    end
     run.spawnedJTAC = jtacName
     if jtacName then end
   elseif task.type == "HF_REMOTE" and not (run.spawnedGroups and run.spawnedGroups[1]) then
@@ -2317,14 +2636,22 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
 
   -- TEA corners for rockets
   if task.type == "ROCKETS" and task.teaCorners then
-    run.teaPoly = rq_buildTEAPolyForTask(run, taskId)
+    run.teaPoly = rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
     if run.teaPoly then
+      rq_log(3, string.format("TEA polygon built for task %d with %d corners", taskId, #run.teaPoly))
     else
+      local zoneName = aircraftPrefix and string.format("%s_T%02d_TEA_ZONE1..4", aircraftPrefix, taskId) or string.format("T%02d_TEA_ZONE1..4", taskId)
+      rq_log(1, string.format("ERROR: Failed to build TEA polygon for task %d. Check that zones %s exist.", taskId, zoneName))
+      rq_msgToGroup(run.groupId, string.format("ERROR: TEA zones missing for task %d. Check mission editor.", taskId), 15)
     end
   end
 
   -- Calculate initial range to target for dynamic timeout (separate from scoring range band)
-  if task.type == "HF_SELF" or task.type == "ROCKETS" or task.type == "HF_REMOTE" or task.type == "GUN" then
+  local taskType = task.type
+  local needsRangeCalc = (taskType == "HF_SELF" or taskType == "HF_REMOTE" or taskType == "ROCKETS" or
+                          taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4" or
+                          taskType == "APKWS" or taskType == "STINGER")
+  if needsRangeCalc then
     local shooterPt = unit:getPoint()
     if shooterPt then
       local bestD = nil
@@ -2421,7 +2748,9 @@ local function rq_tick()
     local unit = Unit.getByName(ownerUnitName)
 
     if (not unit) or (not unit:isExist()) then
-      rq_cleanup(run)
+      -- Unit no longer exists (player quit, crashed, switched aircraft, etc.)
+      -- End the run properly to release range lock and play RANGE_CLEAR
+      rq_endRunNow(run, "UNIT_LOST")
       RANGEQUAL._state.perUnit[ownerUnitName] = nil
     else
       local ended = false
@@ -2454,7 +2783,11 @@ local function rq_tick()
       -- Terminal effect for guns/HF: any life decrease on ANY target object
       if (not ended) and run.state == "HOT" then
         local tt = run.task.type
-        if (tt == "HF_SELF" or tt == "HF_REMOTE" or tt == "GUN") and (not run.effectAchieved) then
+        -- Check for hit-based terminal effect tasks
+        local isHitTask = (tt == "HF_SELF" or tt == "HF_REMOTE" or tt == "GUN" or
+                          tt == "GUN30MM" or tt == "GUN50CAL" or tt == "GUNM4" or
+                          tt == "APKWS" or tt == "STINGER")
+        if isHitTask and (not run.effectAchieved) then
           for name, rec in pairs(run.targetLife or {}) do
             if rec.kind == "unit" then
               local tu = Unit.getByName(name)
@@ -2603,6 +2936,24 @@ local function rq_onShot(run, initiator, weapon)
       end
       run.hfTrack[#run.hfTrack+1] = { weapon=weapon, last=nil }
     end
+  elseif t == "APKWS" then
+    if rq_weaponIsAPKWS(weapon) then
+      run.apkwsFired = (run.apkwsFired or 0) + 1
+      local allowed = run.task.allowed and run.task.allowed.apkws or 0
+      if run.apkwsFired > allowed then
+        rq_endRunNow(run, "OVERCOUNT_APKWS")
+        return
+      end
+    end
+  elseif t == "STINGER" then
+    if rq_weaponIsStinger(weapon) then
+      run.stingersFired = (run.stingersFired or 0) + 1
+      local allowed = run.task.allowed and run.task.allowed.stingers or 0
+      if run.stingersFired > allowed then
+        rq_endRunNow(run, "OVERCOUNT_STINGER")
+        return
+      end
+    end
   elseif t == "ROCKETS" then
     if rq_weaponIsRocket(weapon) then
       run.rocketsFired = run.rocketsFired + 1
@@ -2612,9 +2963,10 @@ local function rq_onShot(run, initiator, weapon)
         return
       end
       run.weaponTrack[#run.weaponTrack+1] = { weapon=weapon, last=nil }
+      rq_log(3, string.format("Rocket fired: %d/%d (tracking %d)", run.rocketsFired, allowed, #run.weaponTrack))
     end
-  elseif t == "GUN" then
-    -- enforced at scoring moment via ammo delta
+  elseif t == "GUN" or t == "GUN30MM" or t == "GUN50CAL" or t == "GUNM4" then
+    -- enforced at scoring moment via ammo delta (except GUNM4 which has unlimited)
   end
 end
 
@@ -2692,14 +3044,15 @@ if id ~= world.event.S_EVENT_SHOT and id ~= world.event.S_EVENT_SHOOTING_START t
     end
 
     -- If we're in a non-gun task and the player starts shooting (guns), it's a wrong-weapon foul.
-    if run.task and run.task.type ~= "GUN" then
+    local taskType = run.task and run.task.type
+    local isGunTask = (taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL" or taskType == "GUNM4")
+    if run.task and not isGunTask then
       rq_endRunNow(run, "WRONG_WEAPON")
       return
     end
     -- Ammo overcount is enforced at scoring time via ammo delta.
   end
 end
-
 
 ----------------------------------------------------------------
 -- MENUS (MP-safe: re-fetch live group by name inside callback)
@@ -2732,9 +3085,14 @@ rq_ensureMenusForGroup = function(group)
   local ownerName = getOwnerUnitName()
   local s = ownerName and RANGEQUAL._state.score[ownerName] or nil
 
+  -- Get the first unit to determine aircraft type
+  local firstUnit = group:getUnit(1)
+  local aircraftConfig = firstUnit and rq_getAircraftConfig(firstUnit) or RANGEQUAL.cfg.ah64
+  local tasks = aircraftConfig.tasks or {}
+
   -- Tasks 1..10 in strict order; label shows score only if >0
   for taskId = 1, 10 do
-    if RANGEQUAL.cfg.tasks[taskId] then
+    if tasks[taskId] then
       local label = ("Task %d"):format(taskId)
       local best = s and s.bestByTask and s.bestByTask[taskId] or nil
       if best and best > 0 then

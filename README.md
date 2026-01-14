@@ -10,16 +10,16 @@ A DCS World mission script for attack helicopter range qualification training. P
 - **Performance Scoring**: Time-based scoring with distance-adjusted curves (30-100 points)
 - **Safety Enforcement**: Foul line, fire zone, motion requirements, and ammo limits
 - **Rocket Impact Tracking**: Visual F10 map markers for rocket hits/misses with TEA (Target Engagement Area) qualification
-- **Dynamic Laser Codes**: Auto-generated JTAC laser codes for remote Hellfire tasks (excludes digit "9")
+- **Dynamic Laser Codes**: Auto-generated JTAC laser codes for remote Hellfire tasks
 - **Audio Callouts**: Optional voice announcements for range state and laser codes
 - **Multi-crew Support**: Handles pilot/CPG seat switching without resetting runs
 
 ## Supported Aircraft
 
-- **AH-64D Apache**: 10 tasks (Hellfires, rockets, 30mm gun, Stinger)
-- **OH-58D Kiowa**: 10 tasks (Hellfires, rockets, .50 cal, M4 rifle, APKWS, Stinger)
+- **AH-64D Apache**: Hellfires, rockets, 30mm gun
+- **OH-58D Kiowa**: Hellfires, APKWS, rockets, .50 cal, M4 rifle, Stinger
 
-## Mission Setup Requirements
+## Mission Setup Requirements - See example MIZ file!
 
 ### 1. Required Trigger Zones
 
@@ -27,11 +27,11 @@ Create these trigger zones in the DCS Mission Editor:
 
 - **`FIRE_ZONE`**: Area where weapons may be fired
 - **`FOUL_LINE`**: Area players must not cross (instant foul if entered)
-- **`RANGE_CLEANUP`** (optional): Area for automatic debris cleanup after tasks
+- **`RANGE_CLEANUP`**: Area for automatic debris cleanup after tasks
 
 ### 2. Target Templates
 
-For each task, create a **late-activated** group or static group template:
+For each task, create a **late-activated** group template. Here are the defaults (as seen in the example MIZ):
 
 #### Apache Tasks
 - `AH64_T01_TARGET` - Hellfire self-lase target (task 1)
@@ -40,14 +40,14 @@ For each task, create a **late-activated** group or static group template:
 - `AH64_T04_TARGET` - Hellfire self-lase target (task 4)
 - `AH64_T05_TARGET` - Rocket target (task 5)
 - `AH64_T06_TARGET` - Hellfire self-lase target (task 6)
-- `AH64_T07_TARGET` - Remote Hellfire target (task 7, must be unit group)
+- `AH64_T07_TARGET` - Remote Hellfire target (task 7)
 - `AH64_T08_TARGET` - 30mm gun target (task 8)
 - `AH64_T09_TARGET` - 30mm gun target (task 9)
 - `AH64_T10_TARGET` - Rocket target (task 10)
 
 #### Kiowa Tasks
 - `OH58_T01_TARGET` - Hellfire self-lase target (task 1)
-- `OH58_T02_TARGET` - Remote Hellfire target (task 2, must be unit group)
+- `OH58_T02_TARGET` - Remote Hellfire target (task 2)
 - `OH58_T03_TARGET` - .50 cal target (task 3)
 - `OH58_T04_TARGET` - .50 cal target (task 4)
 - `OH58_T05_TARGET` - Rocket target (task 5)
@@ -55,9 +55,9 @@ For each task, create a **late-activated** group or static group template:
 - `OH58_T07_TARGET` - M4 rifle target (task 7)
 - `OH58_T08_TARGET` - APKWS target (task 8)
 - `OH58_T09_TARGET` - APKWS target (task 9)
-- `OH58_T10_AIR_TARGET` - Stinger air target (task 10, must be aircraft unit group)
+- `OH58_T10_TARGET` - Stinger air target (task 10)
 
-**Note**: Target templates can be either **unit groups** or **static groups**. Remote Hellfire and Stinger tasks require **unit groups** for lasing/targeting.
+**Note**: Target templates must be late activated **unit groups** not **statics**.
 
 ### 3. JTAC Templates (Remote Hellfire Tasks Only)
 
@@ -70,7 +70,7 @@ The JTAC will spawn automatically and provide laser designation with a randomly 
 
 ### 4. TEA Zones (Rocket Tasks Only)
 
-For rocket tasks, create **4 trigger zones** defining the Target Engagement Area corners:
+For rocket tasks, create **4 small trigger zones** defining the Target Engagement Area corners:
 
 #### Apache Rocket Tasks
 - Task 2: `AH64_T02_TEA_ZONE1`, `AH64_T02_TEA_ZONE2`, `AH64_T02_TEA_ZONE3`, `AH64_T02_TEA_ZONE4`
@@ -110,14 +110,14 @@ Create a **static object** named `TEA_TEMPLATE` (e.g., a cone or marker). The sc
 1. Enter the `FIRE_ZONE` in your aircraft
 2. Open the **F10 Radio Menu** → **Range Control**
 3. Select a task (e.g., "Task 1", "Task 2", etc.)
-4. Message appears: **"TASK X selected. Hold 10 seconds for clearance."**
+4. Message appears: **"TASK X selected. Hold X seconds for clearance."**
 5. Targets spawn, JTAC starts lasing (if applicable)
-6. After 10 seconds: **"CLEARED HOT - TASK X"**
+6. After X seconds: **"CLEARED HOT - TASK X"**
 7. Engage targets with the specified weapon system
 
 ### Task Rules
 
-- **Fire Zone**: All weapon releases must occur inside `FIRE_ZONE`
+- **Fire Zone**: All weapon releases must occur from inside `FIRE_ZONE`
 - **Foul Line**: Do not cross `FOUL_LINE` during active tasks
 - **Motion Requirements**:
   - `HOVER` tasks: < 5 knots ground speed
@@ -141,11 +141,11 @@ Create a **static object** named `TEA_TEMPLATE` (e.g., a cone or marker). The sc
 
 Rocket tasks use TEA (Target Engagement Area) qualification:
 1. Fire rockets at the target area
-2. Impacts inside TEA are marked "HIT" on F10 map (green)
-3. Impacts outside TEA are marked "MISS" on F10 map (red)
+2. Impacts inside TEA are marked "HIT" on F10 map)
+3. Impacts outside TEA are marked "MISS" on F10 map
 4. **Qualification**: 2+ hits inside TEA (timer locks at this moment)
 5. **Perfect Score**: All allowed rockets hit inside TEA (task ends early)
-6. Continue firing until all rockets expended or qualification achieved
+6. Continue firing until all allowed rockets expended or qualification achieved
 
 ## Task Types
 

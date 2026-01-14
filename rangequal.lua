@@ -259,35 +259,7 @@ local function rq_setOcc(unitName, val)
   end
 end
 
-local function rq_wipeUnitSlate(unitName, reason)
-  if not unitName or not RANGEQUAL._state then return end
-
-  -- If there's an active run, end it properly (cleanup targets, play RANGE_CLEAR, etc.)
-  local run = RANGEQUAL._state.perUnit and RANGEQUAL._state.perUnit[unitName]
-  if run then
-    rq_endRunNow(run, "UNIT_LOST")
-  end
-
-  -- Clear lock if held by this unit (may be redundant if rq_endRunNow was called, but defensive)
-  if RANGEQUAL._state.rangeLock and RANGEQUAL._state.rangeLock.ownerUnitName == unitName then
-    RANGEQUAL._state.rangeLock.busy = false
-    RANGEQUAL._state.rangeLock.ownerUnitName = nil
-    RANGEQUAL._state.rangeLock.taskId = nil
-  end
-
-  -- Clear run + scoring
-  if RANGEQUAL._state.perUnit then RANGEQUAL._state.perUnit[unitName] = nil end
-  if RANGEQUAL._state.score then RANGEQUAL._state.score[unitName] = nil end
-
-  -- Clear markers + WELCOME/timing
-  rq_clearUnitMarks(unitName)
-  if RANGEQUAL._state.welcomeHeard then RANGEQUAL._state.welcomeHeard[unitName] = nil end
-  if RANGEQUAL._state.qualStartTime then RANGEQUAL._state.qualStartTime[unitName] = nil end
-  if RANGEQUAL._state.perfectElapsed then RANGEQUAL._state.perfectElapsed[unitName] = nil end
-
-  rq_log(3, string.format("Slate wiped for %s (%s)", tostring(unitName), tostring(reason or "unit_gone")))
-  rq_setOcc(unitName, 0)
-end
+-- rq_wipeUnitSlate moved to after rq_endRunNow to avoid forward reference issues
 
 
 local function rq_nextMarkId()
@@ -2428,6 +2400,39 @@ local function rq_spawnTargetsFromTemplate(run, templateName, aircraftPrefix)
   end
 
   return false
+end
+
+----------------------------------------------------------------
+-- WIPE UNIT SLATE (called when player leaves aircraft)
+----------------------------------------------------------------
+local function rq_wipeUnitSlate(unitName, reason)
+  if not unitName or not RANGEQUAL._state then return end
+
+  -- If there's an active run, end it properly (cleanup targets, play RANGE_CLEAR, etc.)
+  local run = RANGEQUAL._state.perUnit and RANGEQUAL._state.perUnit[unitName]
+  if run then
+    rq_endRunNow(run, "UNIT_LOST")
+  end
+
+  -- Clear lock if held by this unit (may be redundant if rq_endRunNow was called, but defensive)
+  if RANGEQUAL._state.rangeLock and RANGEQUAL._state.rangeLock.ownerUnitName == unitName then
+    RANGEQUAL._state.rangeLock.busy = false
+    RANGEQUAL._state.rangeLock.ownerUnitName = nil
+    RANGEQUAL._state.rangeLock.taskId = nil
+  end
+
+  -- Clear run + scoring
+  if RANGEQUAL._state.perUnit then RANGEQUAL._state.perUnit[unitName] = nil end
+  if RANGEQUAL._state.score then RANGEQUAL._state.score[unitName] = nil end
+
+  -- Clear markers + WELCOME/timing
+  rq_clearUnitMarks(unitName)
+  if RANGEQUAL._state.welcomeHeard then RANGEQUAL._state.welcomeHeard[unitName] = nil end
+  if RANGEQUAL._state.qualStartTime then RANGEQUAL._state.qualStartTime[unitName] = nil end
+  if RANGEQUAL._state.perfectElapsed then RANGEQUAL._state.perfectElapsed[unitName] = nil end
+
+  rq_log(3, string.format("Slate wiped for %s (%s)", tostring(unitName), tostring(reason or "unit_gone")))
+  rq_setOcc(unitName, 0)
 end
 
 ----------------------------------------------------------------

@@ -2998,34 +2998,64 @@ end
 -- AIRCRAFT TYPE DETECTION
 ----------------------------------------------------------------
 local function rq_getAircraftType(unit)
-  if not unit or not unit:isExist() then return nil end
+  trigger.action.outText("DEBUG: rq_getAircraftType called", 5)
+
+  if not unit or not unit:isExist() then
+    trigger.action.outText("DEBUG: rq_getAircraftType - unit nil or doesn't exist", 5)
+    return nil
+  end
+
+  trigger.action.outText("DEBUG: Getting type name...", 5)
   local typeName = unit:getTypeName()
-  if not typeName then return nil end
+  trigger.action.outText("DEBUG: typeName = " .. tostring(typeName), 5)
+
+  if not typeName then
+    trigger.action.outText("DEBUG: typeName is nil", 5)
+    return nil
+  end
 
   local tn = typeName:lower()
+  trigger.action.outText("DEBUG: tn (lowercase) = " .. tostring(tn), 5)
 
   -- OH-58D Kiowa Warrior
   if tn:find("oh-58", 1, true) or tn:find("oh58", 1, true) or tn:find("kiowa", 1, true) then
+    trigger.action.outText("DEBUG: Detected OH-58", 5)
     return "oh58"
   end
 
   -- AH-64D Apache
   if tn:find("ah-64", 1, true) or tn:find("ah64", 1, true) or tn:find("apache", 1, true) then
+    trigger.action.outText("DEBUG: Detected AH-64", 5)
     return "ah64"
   end
 
   -- Default to AH-64 for backwards compatibility with existing missions
+  trigger.action.outText("DEBUG: No match, defaulting to ah64", 5)
   return "ah64"
 end
 
 local function rq_getAircraftConfig(unit)
-  if not unit or not unit:isExist() then return nil end
+  trigger.action.outText("DEBUG: rq_getAircraftConfig called", 5)
+
+  if not unit or not unit:isExist() then
+    trigger.action.outText("DEBUG: rq_getAircraftConfig - unit nil or doesn't exist", 5)
+    return nil
+  end
+
+  trigger.action.outText("DEBUG: Calling rq_getAircraftType...", 5)
   local aircraftType = rq_getAircraftType(unit)
-  if not aircraftType then return nil end
+  trigger.action.outText("DEBUG: aircraftType = " .. tostring(aircraftType), 5)
+
+  if not aircraftType then
+    trigger.action.outText("DEBUG: aircraftType is nil", 5)
+    return nil
+  end
 
   if aircraftType == "oh58" then
+    trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.oh58", 5)
     return RANGEQUAL.cfg.oh58
   else
+    trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.ah64", 5)
     return RANGEQUAL.cfg.ah64
   end
 end

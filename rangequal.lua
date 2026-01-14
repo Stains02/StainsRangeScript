@@ -222,7 +222,7 @@ local function rq_now() return timer.getTime() end
 local function rq_roundSec(t) return math.floor((t or 0) + 0.5) end
 
 -- Logging (silent by default). Set RQ_LOG_LEVEL > 0 to enable.
-local RQ_LOG_LEVEL = 3 -- 0=off, 1=error, 2=warn, 3=info, 4=debug
+local RQ_LOG_LEVEL = 0 -- 0=off, 1=error, 2=warn, 3=info, 4=debug
 local function rq_log(level, msg)
   if level <= (RQ_LOG_LEVEL or 0) then
     trigger.action.outText("[RQ] " .. tostring(msg), 6)

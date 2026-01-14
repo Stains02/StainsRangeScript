@@ -262,7 +262,13 @@ end
 local function rq_wipeUnitSlate(unitName, reason)
   if not unitName or not RANGEQUAL._state then return end
 
-  -- Clear lock if held by this unit
+  -- If there's an active run, end it properly (cleanup targets, play RANGE_CLEAR, etc.)
+  local run = RANGEQUAL._state.perUnit and RANGEQUAL._state.perUnit[unitName]
+  if run then
+    rq_endRunNow(run, "UNIT_LOST")
+  end
+
+  -- Clear lock if held by this unit (may be redundant if rq_endRunNow was called, but defensive)
   if RANGEQUAL._state.rangeLock and RANGEQUAL._state.rangeLock.ownerUnitName == unitName then
     RANGEQUAL._state.rangeLock.busy = false
     RANGEQUAL._state.rangeLock.ownerUnitName = nil

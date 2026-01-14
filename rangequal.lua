@@ -519,7 +519,8 @@ local RQ_OUTCOME_SOUNDS = {
 }
 
 -- ===========================================================
--- Dynamic laser code generation (valid ranges for Apache)
+-- Dynamic laser code generation (valid ranges for Apache and probably Kiowa?)
+-- No #9 in any laser code
 -- ===========================================================
 -- 1111-1788
 -- 2111-2888

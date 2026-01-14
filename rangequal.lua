@@ -549,20 +549,37 @@ local RQ_LASER_RANGES = {
 }
 
 -- Generate a random laser code uniformly across all valid codes in the ranges above.
+-- Excludes any code containing the digit "9".
 local function rq_generateLaserCode()
   local total = 0
   for _, r in ipairs(RQ_LASER_RANGES) do
     total = total + (r[2] - r[1] + 1)
   end
-  local pick = math.random(total)
-  for _, r in ipairs(RQ_LASER_RANGES) do
-    local n = (r[2] - r[1] + 1)
-    if pick <= n then
-      return r[1] + (pick - 1)
+
+  -- Try up to 100 times to generate a code without the digit "9"
+  for attempt = 1, 100 do
+    local pick = math.random(total)
+    local code = nil
+
+    for _, r in ipairs(RQ_LASER_RANGES) do
+      local n = (r[2] - r[1] + 1)
+      if pick <= n then
+        code = r[1] + (pick - 1)
+        break
+      end
+      pick = pick - n
     end
-    pick = pick - n
+
+    -- Check if the code contains the digit "9"
+    if code then
+      local codeStr = tostring(code)
+      if not codeStr:find("9") then
+        return code
+      end
+    end
   end
-  -- Fallback (should never happen)
+
+  -- Fallback (should rarely happen) - return a safe code without "9"
   return 1688
 end
 

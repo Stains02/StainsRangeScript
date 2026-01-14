@@ -167,6 +167,7 @@ RANGEQUAL.cfg = {
 -- INTERNALS
 ----------------------------------------------------------------
 RANGEQUAL._markId = RANGEQUAL._markId or 1000
+RANGEQUAL._runIdCounter = RANGEQUAL._runIdCounter or 0
 
 RANGEQUAL._state = RANGEQUAL._state or {
   perUnit   = {},
@@ -221,8 +222,13 @@ end
 local function rq_now() return timer.getTime() end
 local function rq_roundSec(t) return math.floor((t or 0) + 0.5) end
 
--- Logging (silent by default). Set RQ_LOG_LEVEL > 0 to enable.
-local RQ_LOG_LEVEL = 0 -- 0=off, 1=error, 2=warn, 3=info, 4=debug
+-- Logging (silent by default). Set RQ_LOG_LEVEL to enable:
+-- 0 = off (default)
+-- 1 = errors only
+-- 2 = errors + warnings
+-- 3 = errors + warnings + info (recommended for debugging)
+-- 4 = errors + warnings + info + debug (very verbose)
+local RQ_LOG_LEVEL = 0
 local function rq_log(level, msg)
   if level <= (RQ_LOG_LEVEL or 0) then
     trigger.action.outText("[RQ] " .. tostring(msg), 6)
@@ -716,8 +722,14 @@ local function rq_pointInPoly(p, polyPts)
   local inside = false
   local j = #polyPts
   for i=1,#polyPts do
-    local xi, zi = polyPts[i].x, polyPts[i].z
-    local xj, zj = polyPts[j].x, polyPts[j].z
+    local pi = polyPts[i]
+    local pj = polyPts[j]
+    if not pi or not pi.x or not pi.z or not pj or not pj.x or not pj.z then
+      rq_log(2, "PointInPoly: malformed polygon point at index " .. tostring(i))
+      return false  -- Invalid polygon
+    end
+    local xi, zi = pi.x, pi.z
+    local xj, zj = pj.x, pj.z
     local denom = (zj - zi)
     if denom == 0 then denom = 1e-9 end
     local intersect = ((zi > p.z) ~= (zj > p.z)) and (p.x < (xj - xi) * (p.z - zi) / denom + xi)
@@ -1079,7 +1091,10 @@ end
 --
 -- Supports circle trigger zones AND polygon/quad trigger zones.
 ----------------------------------------------------------------
-local RQ_CLEANUP_ZONE_NAME = "RANGE_CLEANUP"
+-- Cleanup zone name - use config value or fallback to default
+local function rq_getCleanupZoneName()
+  return (RANGEQUAL.cfg and RANGEQUAL.cfg.globals and RANGEQUAL.cfg.globals.cleanupZoneName) or "RANGE_CLEANUP"
+end
 
 
 -- Build a DCS search volume that matches our trigger zone.
@@ -1270,11 +1285,19 @@ local function rq_cleanupLater(run)
   if not run then return end
   if run._cleanupScheduled then return end
   run._cleanupScheduled = true
+  local capturedRunId = run.runId  -- Capture run ID at schedule time
+  local capturedOwner = run.ownerUnitName
   local delay = (RANGEQUAL.cfg and RANGEQUAL.cfg.globals and RANGEQUAL.cfg.globals.cleanupDelaySec) or 0.5
   timer.scheduleFunction(function()
+    -- Validate this is still the correct run for this unit (prevent race condition)
+    local currentRun = RANGEQUAL._state.perUnit[capturedOwner]
+    if currentRun and currentRun.runId == capturedRunId then
+      rq_log(3, "CleanupLater: skipping cleanup - new run already started for " .. tostring(capturedOwner))
+      return nil
+    end
     rq_cleanup(run)
-    local res = rq_cleanupZoneJunkOnly(RQ_CLEANUP_ZONE_NAME)
-    if not (res and res.ok) then rq_log(2, "Zone cleanup failed for "..tostring(RQ_CLEANUP_ZONE_NAME) .. " : " .. tostring(res and res.err)) end
+    local res = rq_cleanupZoneJunkOnly(rq_getCleanupZoneName())
+    if not (res and res.ok) then rq_log(2, "Zone cleanup failed for "..tostring(rq_getCleanupZoneName()) .. " : " .. tostring(res and res.err)) end
     return nil
   end, nil, rq_now() + delay)
 end
@@ -1408,6 +1431,7 @@ local function rq_makeScoreCode(total, timeSec, sevenTasksComplete)
 
   -- Pack score + time + flag into a single payload integer
   -- payload = (score * (TMAX + 1) + time) * 2 + flag
+  -- NOTE: Payload can reach ~21M. Lua numbers are double-precision floats (53-bit mantissa), safe for this range.
   local payload = (score * (RQ_SCORECODE.TMAX + 1) + t) * 2 + flag
 
   -- Obfuscate (reversible permutation): obf = (payload*A + B) mod 26^6
@@ -1597,8 +1621,11 @@ local function rq_getTEACornerZonePoints(taskId, aircraftPrefix)
       rq_log(2, "TEA: missing corner zone " .. zname .. (aircraftPrefix and (" (also tried " .. aircraftPrefix .. "_" .. zname .. ")") or ""))
     end
   end
-  if #pts >= 4 then return pts end
-  return nil
+  if #pts >= 4 then return pts, nil end
+  -- Return error message for user
+  local errMsg = string.format("TEA zones not found or incomplete for Task %d", taskId)
+  rq_log(2, errMsg .. " (prefix=" .. tostring(aircraftPrefix) .. ")")
+  return nil, errMsg
 end
 
 
@@ -1755,10 +1782,10 @@ end
 local function rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
   -- Rocket tasks use TEA corner trigger zones (Txx_TEA_ZONE1..4) to define the polygon.
   -- Visual corner markers are spawned as statics cloned from TEA_TEMPLATE only while the task is active.
-  if not run then return nil end
+  if not run then return nil, "No run provided" end
 
-  local cornerPts = rq_getTEACornerZonePoints(taskId, aircraftPrefix)
-  if not cornerPts then return nil end
+  local cornerPts, err = rq_getTEACornerZonePoints(taskId, aircraftPrefix)
+  if not cornerPts then return nil, err end
 
   -- Spawn visual markers (statics) for this active run/task
   rq_spawnTEAStaticMarksForTask(run, taskId, cornerPts, aircraftPrefix)
@@ -1769,10 +1796,10 @@ local function rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
     local p = cornerPts[i]
     if p then poly[#poly+1] = { x = p.x, z = p.z } end
   end
-  if #poly < 4 then return nil end
+  if #poly < 4 then return nil, "Not enough corner points" end
 
   -- Order corners into a consistent winding so polygon tests behave
-  return rq_sortPolyPts(poly)
+  return rq_sortPolyPts(poly), nil
 end
 
 ----------------------------------------------------------------
@@ -2072,6 +2099,10 @@ local function rq_computeMaxWaitSec(run)
   elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
     local scoringPairs = rq_ceilDiv(allowedRockets, 2)
+    -- Clamp to valid curve table bounds [1-4]
+    if scoringPairs < 1 then scoringPairs = 1 end
+    if scoringPairs > 4 then scoringPairs = 4 end
+    rq_log(4, string.format("Rocket scoringPairs clamped to %d (allowedRockets=%d)", scoringPairs, allowedRockets))
     local band = run.rocketRangeBandAuto or 7
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
     local curve = tbl and tbl[scoringPairs] and tbl[scoringPairs][band] or {}
@@ -2099,6 +2130,10 @@ local function rq_computeDynamicTimeout(run)
   elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
     local scoringPairs = rq_ceilDiv(allowedRockets, 2)
+    -- Clamp to valid curve table bounds [1-4]
+    if scoringPairs < 1 then scoringPairs = 1 end
+    if scoringPairs > 4 then scoringPairs = 4 end
+    rq_log(4, string.format("Rocket scoringPairs clamped to %d (allowedRockets=%d)", scoringPairs, allowedRockets))
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
     local curve = tbl and tbl[scoringPairs] and tbl[scoringPairs][band] or {}
     return rq_getZeroCutoffFromCurve(curve)
@@ -2127,11 +2162,20 @@ local function rq_computeGunEndPad(run)
   local bulletVel = 805  -- Default fallback
   if ownerUnit and ownerUnit:isExist() then
     local aircraftConfig = rq_getAircraftConfig(ownerUnit)
+    if not aircraftConfig then
+      rq_log(2, "GunEndPad: aircraftConfig is nil for " .. tostring(run.ownerUnitName))
+      return 15  -- Safe fallback
+    end
     if taskType == "GUNM4" and aircraftConfig.m4Velocity then
       bulletVel = aircraftConfig.m4Velocity
     elseif aircraftConfig.gunVelocity then
       bulletVel = aircraftConfig.gunVelocity
     end
+  end
+
+  if not rangeM or rangeM <= 0 then
+    rq_log(2, "GunEndPad: invalid rangeM " .. tostring(rangeM))
+    return 15  -- Safe fallback
   end
 
   if bulletVel == 0 then
@@ -2162,6 +2206,10 @@ local function rq_scoreFromTables(run, elapsedSec)
   elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
     local scoringPairs = rq_ceilDiv(allowedRockets, 2)
+    -- Clamp to valid curve table bounds [1-4]
+    if scoringPairs < 1 then scoringPairs = 1 end
+    if scoringPairs > 4 then scoringPairs = 4 end
+    rq_log(4, string.format("Rocket scoringPairs clamped to %d (allowedRockets=%d)", scoringPairs, allowedRockets))
     local band = run.rocketRangeBandAuto or 7
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
     local curve = tbl and tbl[scoringPairs] and tbl[scoringPairs][band] or {}
@@ -2190,21 +2238,22 @@ local function rq_endRunNow(run, reason, elapsedOverride)
 
   local points = 0
 
-  if reason == "EFFECT" then
-    points = rq_scoreFromTables(run, elapsed)
-
-    -- Check ammo count for gun tasks (except GUNM4 which has unlimited ammo)
-    local taskType = run.task.type
-    local isGunTask = (taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL")
-    if isGunTask and unit and unit:isExist() then
-      local ammoEnd = rq_getGunAmmo(unit)
-      local spent = (run.gunAmmoStart or ammoEnd) - ammoEnd
-      local allowed = run.task.allowed and run.task.allowed.gunRounds or 0
-      if spent > allowed then
-        points = 0
-        reason = "OVERCOUNT_GUN"
-      end
+  -- Check ammo count for gun tasks on ALL endings to prevent exploits (except GUNM4 which has unlimited ammo)
+  local taskType = run.task.type
+  local isGunTask = (taskType == "GUN" or taskType == "GUN30MM" or taskType == "GUN50CAL")
+  if isGunTask and unit and unit:isExist() then
+    local ammoEnd = rq_getGunAmmo(unit)
+    local spent = (run.gunAmmoStart or ammoEnd) - ammoEnd
+    local allowed = run.task.allowed and run.task.allowed.gunRounds or 0
+    if spent > allowed then
+      rq_log(3, string.format("Gun ammo overcount: spent=%d allowed=%d", spent, allowed))
+      points = 0
+      reason = "OVERCOUNT_GUN"
     end
+  end
+
+  if reason == "EFFECT" and reason ~= "OVERCOUNT_GUN" then
+    points = rq_scoreFromTables(run, elapsed)
   else
     points = 0
   end
@@ -2215,10 +2264,14 @@ local function rq_endRunNow(run, reason, elapsedOverride)
   do
     local owner = run.ownerUnitName
     local st = RANGEQUAL._state
-    if owner and st and st.qualStartTime and st.qualStartTime[owner] and st.perfectElapsed and (st.perfectElapsed[owner] == nil) then
-      local totalNow = rq_totalScoreForUnit(owner)
-      if totalNow == 1000 then
-        st.perfectElapsed[owner] = rq_now() - st.qualStartTime[owner]
+    if owner and st and st.qualStartTime and st.qualStartTime[owner] and st.perfectElapsed then
+      -- Defensive check: only set if not already set (prevent race condition)
+      if st.perfectElapsed[owner] == nil then
+        local totalNow = rq_totalScoreForUnit(owner)
+        if totalNow == 1000 then
+          st.perfectElapsed[owner] = rq_now() - st.qualStartTime[owner]
+          rq_log(3, string.format("Perfect score achieved for %s at %.1fs", owner, st.perfectElapsed[owner]))
+        end
       end
     end
   end
@@ -2308,12 +2361,20 @@ end
 local function rq_abortRunNoScore(run)
   if not run then return end
 
-  -- Release range lock
+  -- Release range lock (with defensive force-release on mismatch)
   local lock = RANGEQUAL._state.rangeLock
-  if lock and lock.ownerUnitName == run.ownerUnitName then
-    lock.busy = false
-    lock.ownerUnitName = nil
-    lock.taskId = nil
+  if lock then
+    if lock.ownerUnitName == run.ownerUnitName then
+      lock.busy = false
+      lock.ownerUnitName = nil
+      lock.taskId = nil
+    elseif lock.ownerUnitName and lock.ownerUnitName == run.ownerUnitName then
+      -- Defensive: if lock is somehow mismatched but still references this unit, force release
+      rq_log(2, "Lock mismatch detected during abort, forcing release for " .. tostring(run.ownerUnitName))
+      lock.busy = false
+      lock.ownerUnitName = nil
+      lock.taskId = nil
+    end
   end
 
   rq_cleanupLater(run)
@@ -2494,8 +2555,8 @@ local function rq_getAircraftType(unit)
     return "ah64"
   end
 
-  -- Default to AH-64 for backwards compatibility with existing missions
-  return "ah64"
+  -- Unsupported aircraft type
+  return nil
 end
 
 local function rq_getAircraftConfig(unit)
@@ -2567,9 +2628,12 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
     lock.taskId = taskId
   end
 
+  -- Increment global run counter for unique run IDs (prevents cleanup race conditions)
+  RANGEQUAL._runIdCounter = RANGEQUAL._runIdCounter + 1
+
   local run = {
-    -- Unique per-run id; used for unique spawned group naming (prevents silent spawn/collision issues)
-    runId          = math.floor(rq_now() * 1000),
+    -- Unique per-run id; used for unique spawned group naming and cleanup validation
+    runId          = RANGEQUAL._runIdCounter,
     preAmmoHF = rq_getHellfireRemaining(unit),
     ownerUnitName  = ownerUnitName,
     groupId        = group:getID(),
@@ -2637,13 +2701,15 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
 
   -- TEA corners for rockets
   if task.type == "ROCKETS" and task.teaCorners then
-    run.teaPoly = rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
-    if run.teaPoly then
+    local teaPoly, teaErr = rq_buildTEAPolyForTask(run, taskId, aircraftPrefix)
+    if teaPoly then
+      run.teaPoly = teaPoly
       rq_log(3, string.format("TEA polygon built for task %d with %d corners", taskId, #run.teaPoly))
     else
+      local errMsg = teaErr or "TEA zones not configured"
       local zoneName = aircraftPrefix and string.format("%s_T%02d_TEA_ZONE1..4", aircraftPrefix, taskId) or string.format("T%02d_TEA_ZONE1..4", taskId)
       rq_log(1, string.format("ERROR: Failed to build TEA polygon for task %d. Check that zones %s exist.", taskId, zoneName))
-      rq_msgToGroup(run.groupId, string.format("ERROR: TEA zones missing for task %d. Check mission editor.", taskId), 15)
+      rq_msgToGroup(run.groupId, "ERROR: " .. errMsg, 15)
     end
   end
 
@@ -2714,7 +2780,7 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
     r.state = "HOT"
     r.t0 = rq_now()
     r.lastActivityTime = r.t0
-    rq_snapshotTargets(r)
+    -- Target snapshot already taken at task selection (line ~2646)
     -- Start scripted JTAC laser for remote Hellfire tasks
     if r.task.type == "HF_REMOTE" and r.spawnedJTAC then
       local jtacUnitName = r.spawnedJTAC .. "_U1"
@@ -2776,7 +2842,12 @@ local function rq_tick()
         local idleSec = rq_computeDynamicTimeout(run)
         local last = run.lastActivityTime or run.t0 or now
         if idleSec > 0 and (now - last) >= idleSec then
-          rq_endRunNow(run, "IDLE_TIMEOUT", (run.task and run.task.type=="ROCKETS" and run.qualified and run.qualifyTime and ((run.qualifyTime - (run.t0 or run.qualifyTime)))) or nil)
+          -- For rocket tasks, use qualification time if available (safer than complex ternary)
+          local elapsedOverride = nil
+          if run.task and run.task.type == "ROCKETS" and run.qualified and run.qualifyTime then
+            elapsedOverride = (run.qualifyTime - (run.t0 or run.qualifyTime))
+          end
+          rq_endRunNow(run, "IDLE_TIMEOUT", elapsedOverride)
           ended = true
         end
       end
@@ -2982,7 +3053,9 @@ function RANGEQUAL._state.handler:onEvent(event)
   if id == world.event.S_EVENT_PLAYER_ENTER_UNIT or id == world.event.S_EVENT_PLAYER_LEAVE_UNIT then
     local u = event.initiator
     if u and u.getName then
-      local uname = u:getName()
+      local uname = nil
+      pcall(function() uname = u:getName() end)
+      if not uname then return end
       local occ = rq_getOcc(uname)
 
       if id == world.event.S_EVENT_PLAYER_ENTER_UNIT then
@@ -3088,7 +3161,20 @@ rq_ensureMenusForGroup = function(group)
 
   -- Get the first unit to determine aircraft type
   local firstUnit = group:getUnit(1)
-  local aircraftConfig = firstUnit and rq_getAircraftConfig(firstUnit) or RANGEQUAL.cfg.ah64
+  local aircraftConfig = firstUnit and rq_getAircraftConfig(firstUnit) or nil
+
+  -- Check for unsupported aircraft
+  if not aircraftConfig then
+    -- Unsupported aircraft - show error once and skip menu
+    RANGEQUAL._state.unsupportedAircraftWarned = RANGEQUAL._state.unsupportedAircraftWarned or {}
+    if not RANGEQUAL._state.unsupportedAircraftWarned[gname] then
+      rq_msgToGroup(gid, "ERROR: Unsupported aircraft type for Range Qualification (AH-64D/OH-58D only)", 15)
+      RANGEQUAL._state.unsupportedAircraftWarned[gname] = true
+      rq_log(2, "Unsupported aircraft in group " .. tostring(gname))
+    end
+    return  -- Skip menu creation
+  end
+
   local tasks = aircraftConfig.tasks or {}
 
   -- Tasks 1..10 in strict order; label shows score only if >0
@@ -3106,6 +3192,15 @@ rq_ensureMenusForGroup = function(group)
         if not liveOwner then
           rq_msgToGroup(gid, "Group not active yet (slot not occupied).", 6)
           return
+        end
+        -- Re-lookup fresh group ID to avoid stale group ID after respawn
+        local u = Unit.getByName(liveOwner)
+        if u and u:isExist() then
+          local g = u:getGroup()
+          if g and g:isExist() then
+            local freshGid = g:getID()
+            rq_log(4, "Menu callback: starting task " .. tostring(tid) .. " for " .. tostring(liveOwner))
+          end
         end
         rq_startTaskForUnit(liveOwner, tid)
       end)
@@ -3143,9 +3238,31 @@ end
 ----------------------------------------------------------------
 -- STARTUP
 ----------------------------------------------------------------
+local function rq_validateConfiguration()
+  local errors = {}
+  local gcfg = RANGEQUAL.cfg.globals
+
+  if not gcfg.foulZoneName or not rq_getZoneShape(gcfg.foulZoneName) then
+    table.insert(errors, "FOUL_LINE zone not found: " .. tostring(gcfg.foulZoneName))
+  end
+  if not gcfg.fireZoneName or not rq_getZoneShape(gcfg.fireZoneName) then
+    table.insert(errors, "FIRE_ZONE zone not found: " .. tostring(gcfg.fireZoneName))
+  end
+  if not gcfg.cleanupZoneName or not rq_getZoneShape(gcfg.cleanupZoneName) then
+    table.insert(errors, "RANGE_CLEANUP zone not found: " .. tostring(gcfg.cleanupZoneName))
+  end
+
+  if #errors > 0 then
+    trigger.action.outText("[RQ ERROR] Configuration errors:\n" .. table.concat(errors, "\n"), 30)
+    rq_log(1, "Configuration validation failed: " .. table.concat(errors, "; "))
+  end
+end
+
 local function rq_start()
   if RANGEQUAL._state.started then return end
   RANGEQUAL._state.started = true
+
+  rq_validateConfiguration()
 
   world.addEventHandler(RANGEQUAL._state.handler)
 

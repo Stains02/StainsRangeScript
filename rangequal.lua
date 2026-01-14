@@ -2427,126 +2427,59 @@ end
 -- AIRCRAFT TYPE DETECTION
 ----------------------------------------------------------------
 local function rq_getAircraftType(unit)
-  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType called", 5) end)
-
-  if not unit or not unit:isExist() then
-    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType - unit nil or doesn't exist", 5) end)
-    return nil
-  end
-
-  pcall(function() trigger.action.outText("DEBUG: Getting type name...", 5) end)
+  if not unit or not unit:isExist() then return nil end
   local typeName = unit:getTypeName()
-  pcall(function() trigger.action.outText("DEBUG: typeName = " .. tostring(typeName), 5) end)
-
-  if not typeName then
-    pcall(function() trigger.action.outText("DEBUG: typeName is nil", 5) end)
-    return nil
-  end
+  if not typeName then return nil end
 
   local tn = typeName:lower()
-  pcall(function() trigger.action.outText("DEBUG: tn (lowercase) = " .. tostring(tn), 5) end)
 
   -- OH-58D Kiowa Warrior
   if tn:find("oh-58", 1, true) or tn:find("oh58", 1, true) or tn:find("kiowa", 1, true) then
-    pcall(function() trigger.action.outText("DEBUG: Detected OH-58", 5) end)
     return "oh58"
   end
 
   -- AH-64D Apache
   if tn:find("ah-64", 1, true) or tn:find("ah64", 1, true) or tn:find("apache", 1, true) then
-    pcall(function() trigger.action.outText("DEBUG: Detected AH-64", 5) end)
     return "ah64"
   end
 
   -- Default to AH-64 for backwards compatibility with existing missions
-  pcall(function() trigger.action.outText("DEBUG: No match, defaulting to ah64", 5) end)
   return "ah64"
 end
 
 local function rq_getAircraftConfig(unit)
-  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig called", 5) end)
-
-  if not unit or not unit:isExist() then
-    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig - unit nil or doesn't exist", 5) end)
-    return nil
-  end
-
-  pcall(function() trigger.action.outText("DEBUG: Calling rq_getAircraftType...", 5) end)
+  if not unit or not unit:isExist() then return nil end
   local aircraftType = rq_getAircraftType(unit)
-  pcall(function() trigger.action.outText("DEBUG: aircraftType = " .. tostring(aircraftType), 5) end)
-
-  if not aircraftType then
-    pcall(function() trigger.action.outText("DEBUG: aircraftType is nil", 5) end)
-    return nil
-  end
+  if not aircraftType then return nil end
 
   if aircraftType == "oh58" then
-    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.oh58", 5) end)
     return RANGEQUAL.cfg.oh58
   else
-    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.ah64", 5) end)
     return RANGEQUAL.cfg.ah64
   end
 end
 
 local function rq_startTaskForUnit(ownerUnitName, taskId)
-  -- Debug: Function called
-  trigger.action.outText("DEBUG: rq_startTaskForUnit called for " .. tostring(ownerUnitName) .. " task " .. tostring(taskId), 5)
-
-  trigger.action.outText("DEBUG: About to call Unit.getByName...", 5)
   local unit = Unit.getByName(ownerUnitName)
-  trigger.action.outText("DEBUG: Unit.getByName returned: " .. tostring(unit), 5)
-
-  if not unit or not unit:isExist() then
-    trigger.action.outText("DEBUG: Unit not found or doesn't exist", 5)
-    return
-  end
-
-  trigger.action.outText("DEBUG: Unit exists, getting group...", 5)
+  if not unit or not unit:isExist() then return end
   local group = unit:getGroup()
-  trigger.action.outText("DEBUG: getGroup returned: " .. tostring(group), 5)
+  if not group or not group:isExist() then return end
 
-  if not group or not group:isExist() then
-    trigger.action.outText("DEBUG: Group not found or doesn't exist", 5)
-    return
-  end
-
-  trigger.action.outText("DEBUG: About to get aircraft config...", 5)
   -- Get aircraft-specific task table
-  local success, aircraftConfig = pcall(function() return rq_getAircraftConfig(unit) end)
-  if not success then
-    trigger.action.outText("DEBUG: ERROR calling rq_getAircraftConfig: " .. tostring(aircraftConfig), 10)
-    rq_msgToGroup(group:getID(), "ERROR: Failed to get aircraft config: " .. tostring(aircraftConfig), 15)
-    return
-  end
-  trigger.action.outText("DEBUG: aircraftConfig = " .. tostring(aircraftConfig), 5)
-
+  local aircraftConfig = rq_getAircraftConfig(unit)
   if not aircraftConfig then
     rq_msgToGroup(group:getID(), "ERROR: Aircraft configuration not found", 10)
-    trigger.action.outText("DEBUG: aircraftConfig is nil", 5)
     return
   end
-
-  trigger.action.outText("DEBUG: Checking if aircraftConfig.tasks exists...", 5)
   if not aircraftConfig.tasks then
     rq_msgToGroup(group:getID(), "ERROR: No tasks defined for this aircraft", 10)
-    trigger.action.outText("DEBUG: aircraftConfig.tasks is nil", 5)
     return
   end
-
-  trigger.action.outText("DEBUG: Found " .. tostring(#(aircraftConfig.tasks or {})) .. " tasks in config", 5)
-
-  trigger.action.outText("DEBUG: About to shallow copy task " .. tostring(taskId) .. "...", 5)
   local task = rq_shallowCopy(aircraftConfig.tasks[taskId])
-  trigger.action.outText("DEBUG: Shallow copy returned: " .. tostring(task), 5)
-
   if not task then
     rq_msgToGroup(group:getID(), string.format("ERROR: Task %d not found for this aircraft", taskId), 10)
-    trigger.action.outText("DEBUG: Task " .. tostring(taskId) .. " not found in aircraftConfig.tasks", 5)
     return
   end
-
-  trigger.action.outText("DEBUG: Task found, proceeding with task start", 5)
 
   -- Range lock: only one aircraft can run (ARMING/HOT) at a time
   local lock = RANGEQUAL._state.rangeLock
@@ -3111,18 +3044,11 @@ rq_ensureMenusForGroup = function(group)
 
       local tid = taskId -- capture loop variable (Lua 5.1 closure safety)
       missionCommands.addCommandForGroup(gid, label, selectMenu, function()
-        -- Debug: Confirm callback is triggered
-        trigger.action.outText("DEBUG: Task " .. tostring(tid) .. " selected", 5)
-
         local liveOwner = getOwnerUnitName()
         if not liveOwner then
           rq_msgToGroup(gid, "Group not active yet (slot not occupied).", 6)
           return
         end
-
-        -- Debug: Show owner unit name
-        trigger.action.outText("DEBUG: Owner unit = " .. tostring(liveOwner), 5)
-
         rq_startTaskForUnit(liveOwner, tid)
       end)
     end

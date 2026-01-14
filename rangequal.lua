@@ -2431,8 +2431,19 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
 
   -- Get aircraft-specific task table
   local aircraftConfig = rq_getAircraftConfig(unit)
+  if not aircraftConfig then
+    rq_msgToGroup(group:getID(), "ERROR: Aircraft configuration not found", 10)
+    return
+  end
+  if not aircraftConfig.tasks then
+    rq_msgToGroup(group:getID(), "ERROR: No tasks defined for this aircraft", 10)
+    return
+  end
   local task = rq_shallowCopy(aircraftConfig.tasks[taskId])
-  if not task then return end
+  if not task then
+    rq_msgToGroup(group:getID(), string.format("ERROR: Task %d not found for this aircraft", taskId), 10)
+    return
+  end
 
   -- Range lock: only one aircraft can run (ARMING/HOT) at a time
   local lock = RANGEQUAL._state.rangeLock
@@ -2976,7 +2987,10 @@ local function rq_getAircraftType(unit)
 end
 
 local function rq_getAircraftConfig(unit)
+  if not unit or not unit:isExist() then return nil end
   local aircraftType = rq_getAircraftType(unit)
+  if not aircraftType then return nil end
+
   if aircraftType == "oh58" then
     return RANGEQUAL.cfg.oh58
   else

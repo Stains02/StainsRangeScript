@@ -222,7 +222,7 @@ local function rq_now() return timer.getTime() end
 local function rq_roundSec(t) return math.floor((t or 0) + 0.5) end
 
 -- Logging (silent by default). Set RQ_LOG_LEVEL > 0 to enable.
-local RQ_LOG_LEVEL = 0 -- 0=off, 1=error, 2=warn, 3=info, 4=debug (set to 4 for cleanup testing)
+local RQ_LOG_LEVEL = 3 -- 0=off, 1=error, 2=warn, 3=info, 4=debug
 local function rq_log(level, msg)
   if level <= (RQ_LOG_LEVEL or 0) then
     trigger.action.outText("[RQ] " .. tostring(msg), 6)
@@ -295,6 +295,7 @@ local function rq_markRocketImpact(run, impactPoint, isHit)
   if not yy or yy == 0 then yy = land.getHeight({x=impactPoint.x, y=impactPoint.z}) end
   trigger.action.markToAll(mid, txt, {x=impactPoint.x, y=yy, z=impactPoint.z}, true)
   lst[#lst+1] = mid
+  rq_log(3, string.format("Rocket impact marked: %s at (%.0f, %.0f)", label, impactPoint.x, impactPoint.z))
 end
 
 local function rq_getGroundSpeedKt(unit)
@@ -1939,7 +1940,10 @@ local function rq_tickWeaponTracking(run)
 
   local remaining = {}
   local teaVerts = run.teaPoly
-  if not teaVerts or #teaVerts < 3 then return end
+  if not teaVerts or #teaVerts < 3 then
+    rq_log(2, string.format("WARNING: Cannot track rockets - TEA polygon missing or invalid (%s)", teaVerts and "too few verts" or "nil"))
+    return
+  end
 
   for i=1,#run.weaponTrack do
     local wrec = run.weaponTrack[i]
@@ -1954,6 +1958,7 @@ local function rq_tickWeaponTracking(run)
     else
       if wrec.last then
         local inside = rq_pointInPoly({x=wrec.last.x, z=wrec.last.z}, teaVerts)
+        rq_log(3, string.format("Rocket impact detected at (%.0f, %.0f) - %s TEA", wrec.last.x, wrec.last.z, inside and "INSIDE" or "OUTSIDE"))
         if inside then
           rq_markRocketImpact(run, {x=wrec.last.x, y=0, z=wrec.last.z}, true)
         else
@@ -2600,7 +2605,10 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
   if task.type == "ROCKETS" and task.teaCorners then
     run.teaPoly = rq_buildTEAPolyForTask(run, taskId)
     if run.teaPoly then
+      rq_log(3, string.format("TEA polygon built for task %d with %d corners", taskId, #run.teaPoly))
     else
+      rq_log(1, string.format("ERROR: Failed to build TEA polygon for task %d. Check that zones T%02d_TEA_ZONE1..4 exist.", taskId, taskId))
+      rq_msgToGroup(run.groupId, string.format("ERROR: TEA zones missing for task %d. Check mission editor.", taskId), 15)
     end
   end
 
@@ -2921,6 +2929,7 @@ local function rq_onShot(run, initiator, weapon)
         return
       end
       run.weaponTrack[#run.weaponTrack+1] = { weapon=weapon, last=nil }
+      rq_log(3, string.format("Rocket fired: %d/%d (tracking %d)", run.rocketsFired, allowed, #run.weaponTrack))
     end
   elseif t == "GUN" or t == "GUN30MM" or t == "GUN50CAL" or t == "GUNM4" then
     -- enforced at scoring moment via ammo delta (except GUNM4 which has unlimited)

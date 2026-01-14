@@ -2,7 +2,7 @@
 
 A DCS World mission script for attack helicopter range qualification training. Provides automated range control, target management, and performance scoring for Apache (AH-64D) and Kiowa (OH-58D) weapon systems.
 
-## Features
+## Example Mission
 
 Try the example mission!
 

@@ -2423,6 +2423,72 @@ local function rq_spawnTargetsFromTemplate(run, templateName, aircraftPrefix)
   return false
 end
 
+----------------------------------------------------------------
+-- AIRCRAFT TYPE DETECTION
+----------------------------------------------------------------
+local function rq_getAircraftType(unit)
+  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType called", 5) end)
+
+  if not unit or not unit:isExist() then
+    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType - unit nil or doesn't exist", 5) end)
+    return nil
+  end
+
+  pcall(function() trigger.action.outText("DEBUG: Getting type name...", 5) end)
+  local typeName = unit:getTypeName()
+  pcall(function() trigger.action.outText("DEBUG: typeName = " .. tostring(typeName), 5) end)
+
+  if not typeName then
+    pcall(function() trigger.action.outText("DEBUG: typeName is nil", 5) end)
+    return nil
+  end
+
+  local tn = typeName:lower()
+  pcall(function() trigger.action.outText("DEBUG: tn (lowercase) = " .. tostring(tn), 5) end)
+
+  -- OH-58D Kiowa Warrior
+  if tn:find("oh-58", 1, true) or tn:find("oh58", 1, true) or tn:find("kiowa", 1, true) then
+    pcall(function() trigger.action.outText("DEBUG: Detected OH-58", 5) end)
+    return "oh58"
+  end
+
+  -- AH-64D Apache
+  if tn:find("ah-64", 1, true) or tn:find("ah64", 1, true) or tn:find("apache", 1, true) then
+    pcall(function() trigger.action.outText("DEBUG: Detected AH-64", 5) end)
+    return "ah64"
+  end
+
+  -- Default to AH-64 for backwards compatibility with existing missions
+  pcall(function() trigger.action.outText("DEBUG: No match, defaulting to ah64", 5) end)
+  return "ah64"
+end
+
+local function rq_getAircraftConfig(unit)
+  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig called", 5) end)
+
+  if not unit or not unit:isExist() then
+    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig - unit nil or doesn't exist", 5) end)
+    return nil
+  end
+
+  pcall(function() trigger.action.outText("DEBUG: Calling rq_getAircraftType...", 5) end)
+  local aircraftType = rq_getAircraftType(unit)
+  pcall(function() trigger.action.outText("DEBUG: aircraftType = " .. tostring(aircraftType), 5) end)
+
+  if not aircraftType then
+    pcall(function() trigger.action.outText("DEBUG: aircraftType is nil", 5) end)
+    return nil
+  end
+
+  if aircraftType == "oh58" then
+    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.oh58", 5) end)
+    return RANGEQUAL.cfg.oh58
+  else
+    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.ah64", 5) end)
+    return RANGEQUAL.cfg.ah64
+  end
+end
+
 local function rq_startTaskForUnit(ownerUnitName, taskId)
   -- Debug: Function called
   trigger.action.outText("DEBUG: rq_startTaskForUnit called for " .. tostring(ownerUnitName) .. " task " .. tostring(taskId), 5)
@@ -2995,73 +3061,6 @@ if id ~= world.event.S_EVENT_SHOT and id ~= world.event.S_EVENT_SHOOTING_START t
       return
     end
     -- Ammo overcount is enforced at scoring time via ammo delta.
-  end
-end
-
-
-----------------------------------------------------------------
--- AIRCRAFT TYPE DETECTION
-----------------------------------------------------------------
-local function rq_getAircraftType(unit)
-  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType called", 5) end)
-
-  if not unit or not unit:isExist() then
-    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftType - unit nil or doesn't exist", 5) end)
-    return nil
-  end
-
-  pcall(function() trigger.action.outText("DEBUG: Getting type name...", 5) end)
-  local typeName = unit:getTypeName()
-  pcall(function() trigger.action.outText("DEBUG: typeName = " .. tostring(typeName), 5) end)
-
-  if not typeName then
-    pcall(function() trigger.action.outText("DEBUG: typeName is nil", 5) end)
-    return nil
-  end
-
-  local tn = typeName:lower()
-  pcall(function() trigger.action.outText("DEBUG: tn (lowercase) = " .. tostring(tn), 5) end)
-
-  -- OH-58D Kiowa Warrior
-  if tn:find("oh-58", 1, true) or tn:find("oh58", 1, true) or tn:find("kiowa", 1, true) then
-    pcall(function() trigger.action.outText("DEBUG: Detected OH-58", 5) end)
-    return "oh58"
-  end
-
-  -- AH-64D Apache
-  if tn:find("ah-64", 1, true) or tn:find("ah64", 1, true) or tn:find("apache", 1, true) then
-    pcall(function() trigger.action.outText("DEBUG: Detected AH-64", 5) end)
-    return "ah64"
-  end
-
-  -- Default to AH-64 for backwards compatibility with existing missions
-  pcall(function() trigger.action.outText("DEBUG: No match, defaulting to ah64", 5) end)
-  return "ah64"
-end
-
-local function rq_getAircraftConfig(unit)
-  pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig called", 5) end)
-
-  if not unit or not unit:isExist() then
-    pcall(function() trigger.action.outText("DEBUG: rq_getAircraftConfig - unit nil or doesn't exist", 5) end)
-    return nil
-  end
-
-  pcall(function() trigger.action.outText("DEBUG: Calling rq_getAircraftType...", 5) end)
-  local aircraftType = rq_getAircraftType(unit)
-  pcall(function() trigger.action.outText("DEBUG: aircraftType = " .. tostring(aircraftType), 5) end)
-
-  if not aircraftType then
-    pcall(function() trigger.action.outText("DEBUG: aircraftType is nil", 5) end)
-    return nil
-  end
-
-  if aircraftType == "oh58" then
-    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.oh58", 5) end)
-    return RANGEQUAL.cfg.oh58
-  else
-    pcall(function() trigger.action.outText("DEBUG: Returning RANGEQUAL.cfg.ah64", 5) end)
-    return RANGEQUAL.cfg.ah64
   end
 end
 

@@ -2427,25 +2427,36 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
   -- Debug: Function called
   trigger.action.outText("DEBUG: rq_startTaskForUnit called for " .. tostring(ownerUnitName) .. " task " .. tostring(taskId), 5)
 
+  trigger.action.outText("DEBUG: About to call Unit.getByName...", 5)
   local unit = Unit.getByName(ownerUnitName)
+  trigger.action.outText("DEBUG: Unit.getByName returned: " .. tostring(unit), 5)
+
   if not unit or not unit:isExist() then
     trigger.action.outText("DEBUG: Unit not found or doesn't exist", 5)
     return
   end
 
+  trigger.action.outText("DEBUG: Unit exists, getting group...", 5)
   local group = unit:getGroup()
+  trigger.action.outText("DEBUG: getGroup returned: " .. tostring(group), 5)
+
   if not group or not group:isExist() then
     trigger.action.outText("DEBUG: Group not found or doesn't exist", 5)
     return
   end
 
+  trigger.action.outText("DEBUG: About to get aircraft config...", 5)
   -- Get aircraft-specific task table
   local aircraftConfig = rq_getAircraftConfig(unit)
+  trigger.action.outText("DEBUG: aircraftConfig = " .. tostring(aircraftConfig), 5)
+
   if not aircraftConfig then
     rq_msgToGroup(group:getID(), "ERROR: Aircraft configuration not found", 10)
     trigger.action.outText("DEBUG: aircraftConfig is nil", 5)
     return
   end
+
+  trigger.action.outText("DEBUG: Checking if aircraftConfig.tasks exists...", 5)
   if not aircraftConfig.tasks then
     rq_msgToGroup(group:getID(), "ERROR: No tasks defined for this aircraft", 10)
     trigger.action.outText("DEBUG: aircraftConfig.tasks is nil", 5)
@@ -2454,7 +2465,10 @@ local function rq_startTaskForUnit(ownerUnitName, taskId)
 
   trigger.action.outText("DEBUG: Found " .. tostring(#(aircraftConfig.tasks or {})) .. " tasks in config", 5)
 
+  trigger.action.outText("DEBUG: About to shallow copy task " .. tostring(taskId) .. "...", 5)
   local task = rq_shallowCopy(aircraftConfig.tasks[taskId])
+  trigger.action.outText("DEBUG: Shallow copy returned: " .. tostring(task), 5)
+
   if not task then
     rq_msgToGroup(group:getID(), string.format("ERROR: Task %d not found for this aircraft", taskId), 10)
     trigger.action.outText("DEBUG: Task " .. tostring(taskId) .. " not found in aircraftConfig.tasks", 5)

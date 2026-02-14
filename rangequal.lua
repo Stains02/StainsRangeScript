@@ -2828,7 +2828,7 @@ local function rq_tick()
       if (not ended) and run.state == "HOT" and (not run.effectAchieved) then
         local tt = run.task.type
 
-        if tt == "GUN" then
+        if tt == "GUN" or tt == "GUN30MM" or tt == "GUN50CAL" or tt == "GUNM4" then
           local allowed = run.task.allowed and run.task.allowed.gunRounds or 0
           if allowed > 0 and unit and unit:isExist() then
             local ammoNow = rq_getGunAmmo(unit)
@@ -2862,8 +2862,16 @@ local function rq_tick()
           end
           local allowed = run.task.allowed and run.task.allowed.hellfires or 0
           if allowed > 0 and run.hellfiresFired >= allowed and (run.hfTrack and #run.hfTrack == 0) then
-            rq_endRunNow(run, "NO_EFFECT")
-            ended = true
+            -- Grace period: DCS may despawn the weapon object before applying damage
+            -- to the target. Wait a short period so the terminal-effect check (above)
+            -- has time to detect the hit before we declare NO_EFFECT.
+            if not run.hfPendingNoEffectAt then
+              run.hfPendingNoEffectAt = rq_now() + (RANGEQUAL.cfg.globals.successHoldSec or 2.5)
+            end
+            if rq_now() >= run.hfPendingNoEffectAt then
+              rq_endRunNow(run, "NO_EFFECT")
+              ended = true
+            end
           end
         end
       end

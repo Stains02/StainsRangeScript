@@ -2071,7 +2071,7 @@ local function rq_computeMaxWaitSec(run)
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.STINGER_STD or {})
   elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
-    local scoringPairs = rq_ceilDiv(allowedRockets, 2)
+    local scoringPairs = math.max(1, math.min(4, rq_ceilDiv(allowedRockets, 2)))
     local band = run.rocketRangeBandAuto or 7
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
     local curve = tbl and tbl[scoringPairs] and tbl[scoringPairs][band] or {}
@@ -2098,7 +2098,7 @@ local function rq_computeDynamicTimeout(run)
     return rq_getZeroCutoffFromCurve(RANGEQUAL.cfg.curves.STINGER_STD or {})
   elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
-    local scoringPairs = rq_ceilDiv(allowedRockets, 2)
+    local scoringPairs = math.max(1, math.min(4, rq_ceilDiv(allowedRockets, 2)))
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
     local curve = tbl and tbl[scoringPairs] and tbl[scoringPairs][band] or {}
     return rq_getZeroCutoffFromCurve(curve)
@@ -2127,6 +2127,9 @@ local function rq_computeGunEndPad(run)
   local bulletVel = 805  -- Default fallback
   if ownerUnit and ownerUnit:isExist() then
     local aircraftConfig = rq_getAircraftConfig(ownerUnit)
+    if not aircraftConfig then
+      return 15  -- Safe fallback if aircraft config unavailable
+    end
     if taskType == "GUNM4" and aircraftConfig.m4Velocity then
       bulletVel = aircraftConfig.m4Velocity
     elseif aircraftConfig.gunVelocity then
@@ -2161,7 +2164,7 @@ local function rq_scoreFromTables(run, elapsedSec)
     return rq_lookupCurveLinear(RANGEQUAL.cfg.curves.STINGER_STD or {}, elapsedSec)
   elseif taskType == "ROCKETS" then
     local allowedRockets = run.task.allowed and run.task.allowed.rockets or 0
-    local scoringPairs = rq_ceilDiv(allowedRockets, 2)
+    local scoringPairs = math.max(1, math.min(4, rq_ceilDiv(allowedRockets, 2)))
     local band = run.rocketRangeBandAuto or 7
     local tbl = RANGEQUAL.cfg.curves[run.task.rocketCurve]
     local curve = tbl and tbl[scoringPairs] and tbl[scoringPairs][band] or {}
@@ -2776,7 +2779,11 @@ local function rq_tick()
         local idleSec = rq_computeDynamicTimeout(run)
         local last = run.lastActivityTime or run.t0 or now
         if idleSec > 0 and (now - last) >= idleSec then
-          rq_endRunNow(run, "IDLE_TIMEOUT", (run.task and run.task.type=="ROCKETS" and run.qualified and run.qualifyTime and ((run.qualifyTime - (run.t0 or run.qualifyTime)))) or nil)
+          local elapsedOverride = nil
+          if run.task and run.task.type == "ROCKETS" and run.qualified and run.qualifyTime then
+            elapsedOverride = run.qualifyTime - (run.t0 or run.qualifyTime)
+          end
+          rq_endRunNow(run, "IDLE_TIMEOUT", elapsedOverride)
           ended = true
         end
       end
@@ -2990,7 +2997,8 @@ function RANGEQUAL._state.handler:onEvent(event)
   if id == world.event.S_EVENT_PLAYER_ENTER_UNIT or id == world.event.S_EVENT_PLAYER_LEAVE_UNIT then
     local u = event.initiator
     if u and u.getName then
-      local uname = u:getName()
+      local ok, uname = pcall(function() return u:getName() end)
+      if not ok or not uname then return end
       local occ = rq_getOcc(uname)
 
       if id == world.event.S_EVENT_PLAYER_ENTER_UNIT then
@@ -3151,9 +3159,31 @@ end
 ----------------------------------------------------------------
 -- STARTUP
 ----------------------------------------------------------------
+local function rq_validateConfiguration()
+  local errors = {}
+  local gcfg = RANGEQUAL.cfg.globals
+
+  if not gcfg.foulZoneName or not rq_getZoneShape(gcfg.foulZoneName) then
+    table.insert(errors, "FOUL_LINE zone not found: " .. tostring(gcfg.foulZoneName))
+  end
+  if not gcfg.fireZoneName or not rq_getZoneShape(gcfg.fireZoneName) then
+    table.insert(errors, "FIRE_ZONE zone not found: " .. tostring(gcfg.fireZoneName))
+  end
+  if not gcfg.cleanupZoneName or not rq_getZoneShape(gcfg.cleanupZoneName) then
+    table.insert(errors, "RANGE_CLEANUP zone not found: " .. tostring(gcfg.cleanupZoneName))
+  end
+
+  if #errors > 0 then
+    trigger.action.outText("[RQ ERROR] Configuration errors:\n" .. table.concat(errors, "\n"), 30)
+    rq_log(1, "Configuration validation failed: " .. table.concat(errors, "; "))
+  end
+end
+
 local function rq_start()
   if RANGEQUAL._state.started then return end
   RANGEQUAL._state.started = true
+
+  rq_validateConfiguration()
 
   world.addEventHandler(RANGEQUAL._state.handler)
 
